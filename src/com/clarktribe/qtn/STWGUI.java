@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -19,25 +20,15 @@ import java.util.concurrent.TimeUnit;
  * 
  * @author  Geoff Clark
  * @e-mail  gclark82@gmail.com
- * @version alpha 0.0.1
+ * @version alpha 0.0.2
  * 
  */
 
 public class STWGUI extends javax.swing.JFrame {
-    String cat1Path = "default.dat";
-    String cat2Path = "default.dat";
-    String cat3Path = "default.dat";
-    String cat1Res = "/com/clarktribe/qtn/default.dat";
-    String cat2Res = "/com/clarktribe/qtn/default.dat";
-    String cat3Res = "/com/clarktribe/qtn/default.dat";
+    String defaultPath = "default.dat";
     String cscorePath = "Score.dat";
     String hscorePath = "HighScore.dat";
-    String custPath1 = "Category1.txt";
-    String custPath2 = "Category2.txt";
-    String custPath3 = "Category3.txt";
-    String cat1Name = "";
-    String cat2Name = "";
-    String cat3Name = "";
+    String logPath = "error.log";
     int missCount = 0;
     int correctCount = 0;
     char guess;
@@ -55,11 +46,11 @@ public class STWGUI extends javax.swing.JFrame {
             initComponents();
             datFiles();
             scoreFiles();
-            customCats();
+            fillCats();
             introLook();
         } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            writeLog(ex.toString());
+        }
     }
     
     public final void introLook() {
@@ -78,8 +69,8 @@ public class STWGUI extends javax.swing.JFrame {
         phraseWindow.setRows(5);
         phraseWindow.setText("\n\n\n\n\n\n\n                    C L I C K      "
                 + "    S T A R T          T O          B E G I N          G A M"
-                + " E\n\n\n                    C L I C K          R U L E S    "
-                + "      F O R          I N S T R U C T I O N S");
+                + " E\n\n\n                    C L I C K          A B O U T    "
+                + "      F O R          M O R E          I N F O");
         phraseWindow.setAlignmentX(0.0F);
         phraseWindow.setAlignmentY(0.0F);
     }
@@ -88,7 +79,8 @@ public class STWGUI extends javax.swing.JFrame {
         phraseWindow.setColumns(20);
         phraseWindow.setRows(5);
         phraseWindow.setFont(new java.awt.Font("Tahoma", 0, 12));
-        phraseWindow.setText("***Rules***\n\nGuess the phrase before STW ge"
+        phraseWindow.setText("***Rules***\n(Placeholder_Info)\nGuess the phrase"
+                + " before STW ge"
                 + "ts loses!\n\nEnter an alphabet you think that is a part of th"
                 + "e answer.\n\nIf your guessing letter is correct, the blank w"
                 + "ill be replaced with the letter.\n\nIf your guessing alphabe"
@@ -291,20 +283,15 @@ public class STWGUI extends javax.swing.JFrame {
     }
     
     public void hideCato() {
-        cat1Button.setEnabled(false);
-        cat2Button.setEnabled(false);
-        cat3Button.setEnabled(false);
+        catDrop.setEnabled(false);
+        catCButton.setEnabled(false);
     }
     
     public void showCato() {
-        phraseWindow.setText("Which genre would you like to play:\n\n1 - " +
-                cat1Name + "\n2 - " + cat2Name + "\n3 - " + cat3Name + "\n\n  C"
-                + "LICK YOUR CHOICE\n\n                  ||\n                  "
-                + "||\n                _||_\n                 \\  /\n          "
-                + "        \\/");
-        cat1Button.setEnabled(true);
-        cat2Button.setEnabled(true);
-        cat3Button.setEnabled(true);
+        phraseWindow.setText("Use the drop down and select the genre and then c"
+                + "lick CONFIRM.");
+        catDrop.setEnabled(true);
+        catCButton.setEnabled(true);
     }
     
     public void restartGUI() throws IOException {
@@ -313,7 +300,7 @@ public class STWGUI extends javax.swing.JFrame {
             dispose();
             new STWGUI().setVisible(true);
         } catch (IOException ex) {
-                ex.printStackTrace();
+                writeLog(ex.toString());
         }
     }
     
@@ -327,7 +314,7 @@ public class STWGUI extends javax.swing.JFrame {
                 last = br.readLine();
             }
         } catch (IOException ex) {
-                    ex.printStackTrace();
+                    writeLog(ex.toString());
                 }
         return last;
     }
@@ -360,7 +347,7 @@ public class STWGUI extends javax.swing.JFrame {
                             StandardOpenOption.APPEND);
             }
             } catch (IOException ex) {
-            ex.printStackTrace();
+                writeLog(ex.toString());
         }
     }
 
@@ -370,8 +357,8 @@ public class STWGUI extends javax.swing.JFrame {
             try {
                 Files.write(Paths.get(cscorePath), ("\n" + 
                         finalScore).getBytes(), StandardOpenOption.APPEND);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ex) {
+                writeLog(ex.toString());
             }
         }
 
@@ -404,21 +391,17 @@ public class STWGUI extends javax.swing.JFrame {
             hscoreBox.setText(getLast(hscoreFile));
             cscoreBox.setText(getLast(cscoreFile));
             } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+                writeLog(ex.toString());
+            }
     }
     
     public final void datFiles() throws IOException {
         try {
-            File cat1File = new File(cat1Path);
-            File cat2File = new File(cat2Path);
-            File cat3File = new File(cat3Path);
-            dfileCheck(cat1File,cat1Res);
-            dfileCheck(cat2File,cat2Res);
-            dfileCheck(cat3File,cat3Res);
+            File defaultFile = new File(defaultPath);
+            dfileCheck(defaultFile,defaultPath);
             } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+                writeLog(ex.toString());
+            }
     }
     
     private void dfileCheck(File filename, String resource) throws IOException {
@@ -434,12 +417,12 @@ public class STWGUI extends javax.swing.JFrame {
                     writer.flush();
                     writer.write(body);
                     writer.close();
-                hideFile(filename);
+                    hideFile(filename);
                 }
             }
         } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            writeLog(ex.toString());
+        }
     }
     
     private void sfileCheck(File filename) throws IOException {
@@ -453,11 +436,12 @@ public class STWGUI extends javax.swing.JFrame {
                     writer.flush();
                     writer.write(zero);
                     writer.close();
+                    hideFile(filename);
                 }
             }
         } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            writeLog(ex.toString());
+        }
     }
     
     private static void hideFile(File hide) {
@@ -465,7 +449,7 @@ public class STWGUI extends javax.swing.JFrame {
           Process p = Runtime.getRuntime().exec("attrib +H " + hide.getPath());
           p.waitFor(); 
         } catch (IOException | InterruptedException e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
       }
     
@@ -473,65 +457,53 @@ public class STWGUI extends javax.swing.JFrame {
         String catName = "";
         try{
             catName = Files.readAllLines(Paths.get(catPath)).get(0);
-            phraseWindow.append(catName);
-            
         } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            writeLog(ex.toString());
+        }
         return catName;
     }
     
-    public final void customCats() throws IOException {
-        try{
-            customCheck(custPath1,cat1Path);
-            customCheck(custPath2,cat2Path);
-            customCheck(custPath3,cat3Path);
-            cat1Name = catName(cat1Path);
-            cat2Name = catName(cat2Path);
-            cat3Name = catName(cat3Path);
-        } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-    }
-    
-    public void customCheck(String custPath, String origCat) throws 
-            IOException {
-
-        File filename = new File(custPath);
-        boolean exists = filename.exists();
-        
-        if (exists == true) {
-            if(origCat.equalsIgnoreCase(cat1Path)) {
-                cat1Path = filename.toString();
-            }
-            if(origCat.equalsIgnoreCase(cat2Path)) {
-                cat2Path = filename.toString();
-            }
-            if(origCat.equalsIgnoreCase(cat3Path)) {
-                cat3Path = filename.toString();
-            }
-        }
-    }
-
-    public void catButton(String custPath) throws IOException, 
-            InterruptedException {
+    private void fillCats() throws IOException {
         try {
-        if(custPath.equalsIgnoreCase(cat1Path)) {
-            setCat(cat1Name,cat1Path);
-        }
-        if(custPath.equalsIgnoreCase(cat2Path)) {
-            setCat(cat2Name,cat2Path);
-        }
-        if(custPath.equalsIgnoreCase(cat3Path)) {
-            setCat(cat3Name,cat3Path);
-        }
-        } catch (IOException ex) {
-                    ex.printStackTrace();
-        } catch (InterruptedException ex2) {
-                    ex2.printStackTrace();
+            catCButton.setVisible(false);
+            File dir = new File(".\\");
+            FilenameFilter txt = new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return (name.endsWith(".txt") && !name.contains("README.txt"));
                 }
+            };
+            Object[] fileList = dir.list(txt);
+            catDrop.addItem(catName(defaultPath));
+            System.out.println("Here is the raw list:" + fileList[0]);
+            for (Object files : fileList) {
+                String file = files.toString();
+                String itemName = catName(file);
+                catDrop.addItem(itemName);
+            }
+        } catch (IOException ex) {
+            writeLog(ex.toString());
+        }
     }
     
+    private String findPath(int index) {
+        String foundPath = defaultPath;
+        File dir = new File(".\\");
+            FilenameFilter txt = new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return (name.endsWith(".txt") && !name.contains("README.txt"));
+                }
+            };
+        Object[] fileList = dir.list(txt);
+        int trueIndex = index - 1;
+        if(trueIndex >= 0) {
+                foundPath = (String) fileList[index - 1];
+        }
+        System.out.println(foundPath);
+        return foundPath;
+    }
+
     public String getPhrase(String fileName) throws FileNotFoundException, 
             IOException {
         try {
@@ -544,8 +516,8 @@ public class STWGUI extends javax.swing.JFrame {
             pickedPhrase = Files.readAllLines(Paths.get(fileName)).
                     get(randPick);
         } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            writeLog(ex.toString());
+        }
         return pickedPhrase;   
     }
     
@@ -566,17 +538,15 @@ public class STWGUI extends javax.swing.JFrame {
             catBox.setText(catName);
             String phrase = getPhrase(catPath);
             startGame(phrase);
-        } catch (IOException ex) {
-                    ex.printStackTrace();
-                } catch (InterruptedException ex2) {
-                    ex2.printStackTrace();
-                }
+        } catch (IOException | InterruptedException ex) {
+            writeLog(ex.toString());
+        }
     }
     
     public void startGame(String phrase) throws InterruptedException {
         showAlpha();
         gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/com/clarktribe/qtn/miss0.png"))); 
+                getResource("/com/clarktribe/qtn/miss0.png")));
         newButton.setEnabled(true);
         refreshPhrase(pickedPhrase,correctGuesses);
     }
@@ -584,13 +554,14 @@ public class STWGUI extends javax.swing.JFrame {
     public void guessingGame(char guess) throws InterruptedException {
         refreshPhrase(pickedPhrase,correctGuesses);
         lowercaseString = (pickedPhrase).toLowerCase();
-        drawGallow(missCount);
-        String lowercaseGuess = (String.valueOf(guess)).toLowerCase();
+        changeWorld(missCount);
+        String lowercaseGuess = "";
+        lowercaseGuess = (String.valueOf(guess)).toLowerCase();
         if (isitHint == true) {
             correctGuesses += lowercaseGuess;
             ++correctCount;
             ++missCount;
-            drawGallow(missCount);
+            changeWorld(missCount);
             isitHint = false;
             } else {
             if (!lowercaseString.contains(lowercaseGuess)) {
@@ -605,28 +576,30 @@ public class STWGUI extends javax.swing.JFrame {
                         ++correctCount;
                     }
             }
-            drawGallow(missCount);
+            changeWorld(missCount);
             }
             guessesReq = uniqueLetterCount(pickedPhrase);
             if (correctCount == guessesReq) {
-		drawGallow(missCount);
+		changeWorld(missCount);
 		postGame(true);
             }
+            refreshPhrase(pickedPhrase, correctGuesses);
             if (missCount == 5) {
-		drawGallow(5);
+		changeWorld(5);
                 postGame(false);
             }
-            refreshPhrase(pickedPhrase, correctGuesses);
+            
     }
     
-    public void refreshPhrase(String phrase, String correctGuesses) {
-        String puzzledPhrase = phraseBlanks(phrase, correctGuesses);
+    public void refreshPhrase(String phrase, String guesses) {
+        String puzzledPhrase = phraseBlanks(phrase, guesses);
         phraseWindow.setFont(new java.awt.Font("Arial Black", 1, 12));
         phraseWindow.setRows(5);
         phraseWindow.setText("\n\n\nY O U R   P H R A S E   I S :\n\n\n" +
-                puzzledPhrase + "\n\n\n\nC L I C K   A   L E T T E R   B E L O "
-                + "W   T O   G U E S S\n\nC L I C K   O N   H I N T   T O   U S"
-                + " E   A   G U E S S   T O   R E V E A L   A    L E T T E R");
+                puzzledPhrase + "\n\n\nC L I C K   A   L E T T E R   B E L O W "
+                        + "  T O   G U E S S\n\nC L I C K   O N   H I N T   T O"
+                        + "   U S E   A   G U E S S   T O   R E V E A L   A    "
+                        + "L E T T E R");
     }
 
     public int uniqueLetterCount(final String text) {
@@ -644,7 +617,7 @@ public class STWGUI extends javax.swing.JFrame {
 	return uniqueString.length();
 	}
     
-    public void drawGallow(int countMissed) {
+    public void changeWorld(int countMissed) {
         String step = String.valueOf(countMissed);
         if(step.equals("0")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
@@ -670,7 +643,7 @@ public class STWGUI extends javax.swing.JFrame {
         }
         if(step.equals("5")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/miss5.png")));
+            getResource("/com/clarktribe/qtn/youlose.png")));
         }              
     }
     
@@ -855,6 +828,24 @@ public class STWGUI extends javax.swing.JFrame {
 	}
         return wordUnguessed;
     }
+    
+    public String phraseRevealed(String phrase) {
+        String wordRevealed = "";
+        char ch;
+        for (int index = 0; index < phrase.length(); ++index) {
+            ch = phrase.charAt(index);
+            if (!Character.isLetter(ch)) {
+                wordRevealed += ch;
+            }
+            if (Character.isLetter(ch)) {
+                wordRevealed += ch;
+            }
+            if (index < phrase.length() - 1) {
+                wordRevealed += " ";
+            }
+	}
+        return wordRevealed;
+    }
         
     public void postGame(boolean wasitVictory) throws InterruptedException {
         disableAlpha();
@@ -873,11 +864,12 @@ public class STWGUI extends javax.swing.JFrame {
     }
     
     public void playAgain() {
-        phraseWindow.setText("\n\n\n\n\n\n\n C L I C K         S T A R T       "
-                + "   O V E R        T O         B E G I N         A         N "
-                + "E W         G A M E\n\n\n                 C L I C K         "
-                + "E X I T         T O         E N D         Y O U R         S "
-                + "E S S I O N");
+        String revealedPhrase = phraseRevealed(pickedPhrase);
+        phraseWindow.setText("Y O U     F A I L E D !\n\n\nY O U R   P H R A S "
+                + "E   W A S :\n\n\n" + revealedPhrase + "\n\n\nC L I C K     S"
+                        + " T A R T     O V E R     T O     B E G I N     A    "
+                        + " N E W     G A M E\n\n\nC L I C K     E X I T     T "
+                        + "O     E N D     Y O U R     S E S S I O N");
     }
     
     private void endProcesses() throws IOException {
@@ -886,8 +878,8 @@ public class STWGUI extends javax.swing.JFrame {
             saveScore();
             saveHigh();
         } catch (IOException ex) {
-                    ex.printStackTrace();
-                } 
+            writeLog(ex.toString());
+        }
     }
     
     private void flushOut() throws InterruptedException {
@@ -895,8 +887,38 @@ public class STWGUI extends javax.swing.JFrame {
         System.gc();
         try {
             Files.deleteIfExists(Paths.get(cscorePath));
-        } catch(IOException e) {
-            e.printStackTrace();
+        } catch(IOException ex) {
+            writeLog(ex.toString());
+        }
+    }
+    
+    private void writeLog(String logInfo) {
+        try {
+            File logFile = new File(logPath);
+            logCheck(logFile);
+            Files.write(Paths.get(logPath), (logInfo + "\n").getBytes(),
+                    StandardOpenOption.APPEND);
+        } catch(IOException ex) {
+            writeLog(ex.toString());
+        }
+    }
+
+    private void logCheck(File filename) throws IOException {
+        try{
+            boolean exists = filename.exists();
+            if (exists == false) {
+                filename.createNewFile();
+                String blank = "";
+                try (BufferedWriter writer = new BufferedWriter(new
+                FileWriter(filename))) {
+                    writer.flush();
+                    writer.write(blank);
+                    writer.close();
+                    hideFile(filename);
+                }
+            }
+        } catch (IOException ex) {
+            writeLog(ex.toString());
         }
     }
     
@@ -906,11 +928,9 @@ public class STWGUI extends javax.swing.JFrame {
             System.gc();
             flushOut();
             System.exit(0);
-        } catch (IOException ex) {
-                    ex.printStackTrace();
-                } catch (InterruptedException ex2) {
-                    ex2.printStackTrace();
-                }
+        } catch (IOException | InterruptedException ex) {
+            writeLog(ex.toString());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -932,9 +952,8 @@ public class STWGUI extends javax.swing.JFrame {
         hscoreBox = new javax.swing.JTextField();
         hintButton = new javax.swing.JToggleButton();
         usedTitle = new javax.swing.JLabel();
-        cat1Button = new javax.swing.JButton();
-        cat2Button = new javax.swing.JButton();
-        cat3Button = new javax.swing.JButton();
+        catDrop = new javax.swing.JComboBox<>();
+        catCButton = new javax.swing.JButton();
         usedA = new javax.swing.JToggleButton();
         usedB = new javax.swing.JToggleButton();
         usedC = new javax.swing.JToggleButton();
@@ -961,6 +980,7 @@ public class STWGUI extends javax.swing.JFrame {
         usedX = new javax.swing.JToggleButton();
         usedY = new javax.swing.JToggleButton();
         usedZ = new javax.swing.JToggleButton();
+        catLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Save The World");
@@ -968,7 +988,7 @@ public class STWGUI extends javax.swing.JFrame {
 
         mainTitle.setFont(new java.awt.Font("Stencil Std", 0, 16)); // NOI18N
         mainTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        mainTitle.setText("SAVE THE WORLD");
+        mainTitle.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/clarktribe/qtn/header.png"))); // NOI18N
         mainTitle.setFocusable(false);
 
         gameBox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -980,7 +1000,7 @@ public class STWGUI extends javax.swing.JFrame {
         phraseWindow.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         phraseWindow.setLineWrap(true);
         phraseWindow.setRows(5);
-        phraseWindow.setText("\n\n\n\n\n\n\n                    C L I C K          S T A R T          T O          B E G I N          G A M E\n\n\n                    C L I C K          R U L E S          F O R          I N S T R U C T I O N S");
+        phraseWindow.setText("\n\n\n\n\n\n\n                    C L I C K          S T A R T          T O          B E G I N          G A M E\n\n\n                    C L I C K          A B O U T          F O R          M O R E          I N F O");
         phraseWindow.setAlignmentX(0.0F);
         phraseWindow.setAlignmentY(0.0F);
         phraseWindow.setAutoscrolls(false);
@@ -994,7 +1014,7 @@ public class STWGUI extends javax.swing.JFrame {
             }
         });
 
-        rulesButton.setText("Rules");
+        rulesButton.setText("About");
         rulesButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 rulesButtonActionPerformed(evt);
@@ -1008,7 +1028,9 @@ public class STWGUI extends javax.swing.JFrame {
             }
         });
 
-        cscoreLabel.setText("Current Score");
+        cscoreLabel.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        cscoreLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        cscoreLabel.setText("SCORE");
         cscoreLabel.setFocusable(false);
 
         cscoreBox.setEditable(false);
@@ -1016,8 +1038,9 @@ public class STWGUI extends javax.swing.JFrame {
         cscoreBox.setAutoscrolls(false);
         cscoreBox.setFocusable(false);
 
+        catLabel.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         catLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        catLabel.setText("Category");
+        catLabel.setText("CATEGORY");
         catLabel.setFocusable(false);
 
         catBox.setEditable(false);
@@ -1025,8 +1048,9 @@ public class STWGUI extends javax.swing.JFrame {
         catBox.setAutoscrolls(false);
         catBox.setFocusable(false);
 
+        hscoreLabel.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         hscoreLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        hscoreLabel.setText("High Score");
+        hscoreLabel.setText("HIGH SCORE");
         hscoreLabel.setFocusable(false);
 
         hscoreBox.setEditable(false);
@@ -1041,34 +1065,20 @@ public class STWGUI extends javax.swing.JFrame {
             }
         });
 
-        usedTitle.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        usedTitle.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         usedTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         usedTitle.setText("AVAILABLE CHARACTERS");
 
-        cat1Button.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        cat1Button.setText("Category 1");
-        cat1Button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        cat1Button.addActionListener(new java.awt.event.ActionListener() {
+        catDrop.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cat1ButtonActionPerformed(evt);
+                catDropActionPerformed(evt);
             }
         });
 
-        cat2Button.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        cat2Button.setText("Category 2");
-        cat2Button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        cat2Button.addActionListener(new java.awt.event.ActionListener() {
+        catCButton.setText("Confirm");
+        catCButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cat2ButtonActionPerformed(evt);
-            }
-        });
-
-        cat3Button.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
-        cat3Button.setText("Category 3");
-        cat3Button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        cat3Button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cat3ButtonActionPerformed(evt);
+                catCButtonActionPerformed(evt);
             }
         });
 
@@ -1332,17 +1342,22 @@ public class STWGUI extends javax.swing.JFrame {
             }
         });
 
+        catLabel1.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        catLabel1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        catLabel1.setText("CATEGORY:");
+        catLabel1.setFocusable(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(mainTitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(gameBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
@@ -1352,91 +1367,97 @@ public class STWGUI extends javax.swing.JFrame {
                                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                         .addComponent(hscoreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGap(18, 18, 18)
-                                        .addComponent(catLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(18, 18, 18)
-                                        .addComponent(cscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(cscoreLabel))))
-                            .addComponent(gameBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(mainTitle, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(catLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(cscoreBox, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
+                                    .addComponent(cscoreLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                         .addGap(18, 18, 18))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(18, 18, 18)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(rulesButton, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(newButton, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(cat2Button, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
-                                    .addComponent(cat1Button, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(cat3Button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addGap(15, 15, 15)
-                                .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(usedTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 408, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(exitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(hintButton, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(catLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(catDrop, javax.swing.GroupLayout.PREFERRED_SIZE, 449, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addGap(20, 20, 20)
+                                        .addComponent(usedTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 505, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addGroup(layout.createSequentialGroup()
+                                                        .addGap(10, 10, 10)
+                                                        .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                    .addGroup(layout.createSequentialGroup()
+                                                        .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addGap(10, 10, 10)
+                                                .addComponent(hintButton, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                            .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(412, 412, 412)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
+                                            .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addGap(34, 34, 34)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(exitButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
+                                .addComponent(catCButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(rulesButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(newButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1458,57 +1479,50 @@ public class STWGUI extends javax.swing.JFrame {
                 .addComponent(gameBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 277, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(cat1Button)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cat2Button)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cat3Button)
-                        .addGap(11, 11, 11)
-                        .addComponent(rulesButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(exitButton)
-                            .addComponent(newButton)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(35, 35, 35)
-                        .addComponent(usedTitle)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(hintButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(5, 5, 5)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(19, 19, 19))
+                .addGap(15, 15, 15)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(catDrop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(catLabel1)
+                    .addComponent(catCButton))
+                .addGap(9, 9, 9)
+                .addComponent(usedTitle)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(newButton)
+                    .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(rulesButton)
+                    .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(5, 5, 5)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(exitButton)
+                    .addComponent(hintButton))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
 
         pack();
@@ -1518,7 +1532,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             displayHint();
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
         hintButton.setSelected(true);
         hintButton.setEnabled(false);
@@ -1531,10 +1545,8 @@ public class STWGUI extends javax.swing.JFrame {
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
         try {
             exitProcesses();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
+        } catch (IOException | InterruptedException ex) {
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_exitButtonActionPerformed
 
@@ -1546,34 +1558,10 @@ public class STWGUI extends javax.swing.JFrame {
             try {
                 restartGUI();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                writeLog(ex.toString());
             }
         }
     }//GEN-LAST:event_newButtonActionPerformed
-
-    private void cat1ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cat1ButtonActionPerformed
-        try {
-            catButton(cat1Path);
-        } catch (IOException | InterruptedException ex) {
-            ex.printStackTrace();
-        }
-    }//GEN-LAST:event_cat1ButtonActionPerformed
-
-    private void cat2ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cat2ButtonActionPerformed
-        try {
-            catButton(cat2Path);
-        } catch (IOException | InterruptedException ex) {
-            ex.printStackTrace();
-        }                      
-    }//GEN-LAST:event_cat2ButtonActionPerformed
-
-    private void cat3ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cat3ButtonActionPerformed
-        try {
-            catButton(cat3Path);
-        } catch (IOException | InterruptedException ex) {
-            ex.printStackTrace();
-        }   
-    }//GEN-LAST:event_cat3ButtonActionPerformed
 
     private void usedAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usedAActionPerformed
         usedA.setSelected(true);
@@ -1581,7 +1569,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('A');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
         
     }//GEN-LAST:event_usedAActionPerformed
@@ -1592,7 +1580,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('B');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedBActionPerformed
 
@@ -1602,7 +1590,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('C');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedCActionPerformed
 
@@ -1612,7 +1600,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('D');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedDActionPerformed
 
@@ -1622,7 +1610,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('E');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedEActionPerformed
 
@@ -1632,7 +1620,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('F');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedFActionPerformed
 
@@ -1642,7 +1630,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('G');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedGActionPerformed
 
@@ -1652,7 +1640,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('H');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedHActionPerformed
 
@@ -1662,7 +1650,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('I');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedIActionPerformed
 
@@ -1672,7 +1660,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('J');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedJActionPerformed
 
@@ -1682,7 +1670,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('K');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedKActionPerformed
 
@@ -1692,7 +1680,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('L');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedLActionPerformed
 
@@ -1702,7 +1690,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('M');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedMActionPerformed
 
@@ -1712,7 +1700,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('N');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedNActionPerformed
 
@@ -1722,7 +1710,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('O');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedOActionPerformed
 
@@ -1732,7 +1720,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('P');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedPActionPerformed
 
@@ -1742,7 +1730,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('Q');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedQActionPerformed
 
@@ -1752,7 +1740,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('R');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedRActionPerformed
 
@@ -1762,7 +1750,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('S');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedSActionPerformed
 
@@ -1772,7 +1760,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('T');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedTActionPerformed
 
@@ -1782,7 +1770,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('U');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedUActionPerformed
 
@@ -1792,7 +1780,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('V');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedVActionPerformed
 
@@ -1802,7 +1790,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('W');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedWActionPerformed
 
@@ -1812,7 +1800,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('X');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedXActionPerformed
 
@@ -1822,7 +1810,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('Y');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedYActionPerformed
 
@@ -1832,9 +1820,23 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             guessingGame('Z');
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            writeLog(ex.toString());
         }
     }//GEN-LAST:event_usedZActionPerformed
+
+    private void catDropActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catDropActionPerformed
+        catCButton.setVisible(true);
+    }//GEN-LAST:event_catDropActionPerformed
+
+    private void catCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catCButtonActionPerformed
+        int index = (int) catDrop.getSelectedIndex();
+        String catPath = findPath(index);
+        try {
+            setCat((catName(catPath)),catPath);
+        } catch (IOException | InterruptedException ex) {
+            writeLog(ex.toString());
+        }
+    }//GEN-LAST:event_catCButtonActionPerformed
 
     public static void main(String args[]) {
         try {
@@ -1844,13 +1846,9 @@ public class STWGUI extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
-        } catch (InstantiationException ex) {
-            ex.printStackTrace();
-        } catch (IllegalAccessException ex) {
-            ex.printStackTrace();
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | 
+                IllegalAccessException | 
+                javax.swing.UnsupportedLookAndFeelException ex) {
             ex.printStackTrace();
         }
 
@@ -1867,11 +1865,11 @@ public class STWGUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton cat1Button;
-    private javax.swing.JButton cat2Button;
-    private javax.swing.JButton cat3Button;
     private javax.swing.JTextField catBox;
+    private javax.swing.JButton catCButton;
+    private javax.swing.JComboBox<String> catDrop;
     private javax.swing.JLabel catLabel;
+    private javax.swing.JLabel catLabel1;
     private javax.swing.JTextField cscoreBox;
     private javax.swing.JLabel cscoreLabel;
     private javax.swing.JButton exitButton;

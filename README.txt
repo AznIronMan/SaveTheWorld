@@ -76,6 +76,16 @@ Contact the author:  gclark82@gmail.com
 
 RELEASE NOTES
 
+alpha v0.0.2
+-implemented category drop down that finds txt files to generate phrase files from
+-removed hard coded 3 categories and buttons
+-change score files to be hidden from user
+-added exception logging feature
+-updated placeholder graphics to a new globe
+-phrase is now revealed if the user loses (added reveal phrase process)
+-removed used draw for miss count 5.
+-updated some wording to reflect new narrative of saving the world.
+
 alpha v0.0.1
 
 - initial baseline commit
