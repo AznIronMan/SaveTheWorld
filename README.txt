@@ -1,6 +1,6 @@
 =====================================
 SAVE THE WORLD by Geoff Clark
-VERSION ALPHA 0.0.1 / 2020.11.15.1630
+VERSION ALPHA 0.0.2 / 2020.11.15.2218
 =====================================
 
 This program was written with JDK 1.8.  It does require a minimum of JRE 52 to run.
@@ -76,7 +76,8 @@ Contact the author:  gclark82@gmail.com
 
 RELEASE NOTES
 
-alpha v0.0.2
+alpha v0.0.2 / 2020.11.15.2218
+
 -implemented category drop down that finds txt files to generate phrase files from
 -removed hard coded 3 categories and buttons
 -change score files to be hidden from user
@@ -86,7 +87,7 @@ alpha v0.0.2
 -removed used draw for miss count 5.
 -updated some wording to reflect new narrative of saving the world.
 
-alpha v0.0.1
+alpha v0.0.1 / 2020.11.15.1630
 
 - initial baseline commit
 - converted from og code to be rewritten for commercial release
