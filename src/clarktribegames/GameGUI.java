@@ -1,4 +1,4 @@
-package com.clarktribe.qtn;
+package clarktribegames;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,15 +16,22 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+// <editor-fold defaultstate="collapsed" desc="credits">
 /**
  * 
  * @author  Geoff Clark
- * @e-mail  gclark82@gmail.com
- * @version alpha 0.0.2
+ * @e-mail  info@clarktribegames.com
+ * @game    Save The World
  * 
  */
+// </editor-fold>
 
-public class STWGUI extends javax.swing.JFrame {
+public class GameGUI extends javax.swing.JFrame {
+    
+    String appName = "Save The World";
+    String appVer = "0.0.003";
+    String packagename = (((GameGUI.class).toString()).replaceAll("class ", "")).
+            replaceAll(".STWGUI", "");
     String defaultPath = "default.dat";
     String cscorePath = "Score.dat";
     String hscorePath = "HighScore.dat";
@@ -41,7 +48,10 @@ public class STWGUI extends javax.swing.JFrame {
     String pickedPhrase = "";
     boolean isitHint = false;
     
-    public STWGUI() throws IOException {
+    public GameGUI() throws IOException {
+        
+        System.out.println(packagename);
+    
         try {
             initComponents();
             datFiles();
@@ -63,7 +73,7 @@ public class STWGUI extends javax.swing.JFrame {
     
     public void introText() {
         gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/com/clarktribe/qtn/title.png")));
+                getResource("/" +  packagename + "/title.png")));
         phraseWindow.setFocusable(true);
         phraseWindow.setFont(new java.awt.Font("Tahoma", 0, 12));
         phraseWindow.setRows(5);
@@ -298,7 +308,7 @@ public class STWGUI extends javax.swing.JFrame {
         try {
             endProcesses();
             dispose();
-            new STWGUI().setVisible(true);
+            new GameGUI().setVisible(true);
         } catch (IOException ex) {
                 writeLog(ex.toString());
         }
@@ -410,7 +420,7 @@ public class STWGUI extends javax.swing.JFrame {
             if (exists == false) {
                 filename.createNewFile();
                 String body = new Scanner
-                    (STWGUI.class.getResourceAsStream(resource)).
+                    (GameGUI.class.getResourceAsStream(resource)).
                         useDelimiter("\\A").next();
                 try (BufferedWriter writer = new BufferedWriter(new
                 FileWriter(filename))) {
@@ -546,7 +556,7 @@ public class STWGUI extends javax.swing.JFrame {
     public void startGame(String phrase) throws InterruptedException {
         showAlpha();
         gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/com/clarktribe/qtn/miss0.png")));
+                getResource("/" +  packagename + "/miss0.png")));
         newButton.setEnabled(true);
         refreshPhrase(pickedPhrase,correctGuesses);
     }
@@ -621,29 +631,29 @@ public class STWGUI extends javax.swing.JFrame {
         String step = String.valueOf(countMissed);
         if(step.equals("0")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/miss0.png")));
+            getResource("/" +  packagename + "/miss0.png")));
         }
         if(step.equals("1")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/miss1.png")));
+            getResource("/" +  packagename + "/miss1.png")));
         }
         if(step.equals("2")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/miss2.png")));
+            getResource("/" +  packagename + "/miss2.png")));
         }
         if(step.equals("3")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/miss3.png")));
+            getResource("/" +  packagename + "/miss3.png")));
         }
         if(step.equals("4")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/miss4.png")));
+            getResource("/" +  packagename + "/miss4.png")));
             hintButton.setSelected(true);
             hintButton.setEnabled(false);
         }
         if(step.equals("5")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/com/clarktribe/qtn/youlose.png")));
+            getResource("/" +  packagename + "/youlose.png")));
         }              
     }
     
@@ -853,12 +863,12 @@ public class STWGUI extends javax.swing.JFrame {
             scoreChange(1);
             TimeUnit.SECONDS.sleep(1);
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/com/clarktribe/qtn/youwin.png")));
+                getResource("/" +  packagename + "/youwin.png")));
         } else {
             scoreChange(-1);
             TimeUnit.SECONDS.sleep(1);
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/com/clarktribe/qtn/youlose.png")));
+                getResource("/" +  packagename + "/youlose.png")));
         }
         playAgain();        
     }
@@ -981,6 +991,9 @@ public class STWGUI extends javax.swing.JFrame {
         usedY = new javax.swing.JToggleButton();
         usedZ = new javax.swing.JToggleButton();
         catLabel1 = new javax.swing.JLabel();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Save The World");
@@ -988,11 +1001,11 @@ public class STWGUI extends javax.swing.JFrame {
 
         mainTitle.setFont(new java.awt.Font("Stencil Std", 0, 16)); // NOI18N
         mainTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        mainTitle.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/clarktribe/qtn/header.png"))); // NOI18N
+        mainTitle.setIcon(new javax.swing.ImageIcon(getClass().getResource("/clarktribegames/header.png"))); // NOI18N
         mainTitle.setFocusable(false);
 
         gameBox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        gameBox.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/clarktribe/qtn/title.png"))); // NOI18N
+        gameBox.setIcon(new javax.swing.ImageIcon(getClass().getResource("/clarktribegames/title.png"))); // NOI18N
         gameBox.setFocusable(false);
 
         phraseWindow.setEditable(false);
@@ -1347,6 +1360,14 @@ public class STWGUI extends javax.swing.JFrame {
         catLabel1.setText("CATEGORY:");
         catLabel1.setFocusable(false);
 
+        jMenu1.setText("File");
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Edit");
+        jMenuBar1.add(jMenu2);
+
+        setJMenuBar(jMenuBar1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -1354,41 +1375,18 @@ public class STWGUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(gameBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                        .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(catBox))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                        .addComponent(hscoreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(18, 18, 18)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(mainTitle, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(catLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                                .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(cscoreBox, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
-                                    .addComponent(cscoreLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                        .addGap(18, 18, 18))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addComponent(catLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(catLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(catDrop, javax.swing.GroupLayout.PREFERRED_SIZE, 449, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                        .addGap(20, 20, 20)
-                                        .addComponent(usedTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 505, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
+                                        .addComponent(catDrop, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addComponent(usedTitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(layout.createSequentialGroup()
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
@@ -1451,21 +1449,41 @@ public class STWGUI extends javax.swing.JFrame {
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                             .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
                                             .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(34, 34, 34)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(exitButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
-                                .addComponent(catCButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(exitButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(catCButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(rulesButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(newButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap())
+                            .addComponent(newButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(gameBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                        .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(catBox))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                        .addComponent(hscoreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(18, 18, 18)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(mainTitle, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
+                                            .addComponent(catLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(cscoreBox, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
+                                    .addComponent(cscoreLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(26, 26, 26))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(19, 19, 19)
                 .addComponent(mainTitle)
-                .addGap(13, 13, 13)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cscoreLabel)
                     .addComponent(catLabel)
@@ -1475,11 +1493,11 @@ public class STWGUI extends javax.swing.JFrame {
                     .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(catBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31)
-                .addComponent(gameBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 277, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15)
+                .addComponent(gameBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 249, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(catDrop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(catLabel1)
@@ -1522,7 +1540,7 @@ public class STWGUI extends javax.swing.JFrame {
                     .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(exitButton)
                     .addComponent(hintButton))
-                .addContainerGap(18, Short.MAX_VALUE))
+                .addGap(19, 19, 19))
         );
 
         pack();
@@ -1838,32 +1856,43 @@ public class STWGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_catCButtonActionPerformed
 
-    public static void main(String args[]) {
+//    public static void main(String args[]) {
+//        try {
+//            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+//                if ("Windows".equals(info.getName())) {
+//                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+//                    break;
+//                }
+//            }
+//        } catch (ClassNotFoundException | InstantiationException | 
+//                IllegalAccessException | 
+//                javax.swing.UnsupportedLookAndFeelException ex) {
+//            ex.printStackTrace();
+//        }
+//
+//        java.awt.EventQueue.invokeLater(new Runnable() {
+//            public void run() {
+//                try {
+//                    new GameGUI().setVisible(true);
+//                } catch (IOException ex) {
+//                    ex.printStackTrace();
+//                }
+//            }
+//        });
+//        
+//    }
+    
+    //<editor-fold defaultstate="collapsed" desc="Log File Method">
+    private static void logFile (String type, String loginfo) throws IOException {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException | InstantiationException | 
-                IllegalAccessException | 
-                javax.swing.UnsupportedLookAndFeelException ex) {
-            ex.printStackTrace();
+            new LogWriter().writeLog(type,loginfo);
+        } catch(IOException ioex) {
+            logFile("severe","logFile cannot fine log file (infinite loop)!");
         }
-
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    new STWGUI().setVisible(true);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        
     }
+    //</editor-fold>
 
+    //<editor-fold defaultstate="collapsed" desc="Footer Info">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField catBox;
     private javax.swing.JButton catCButton;
@@ -1877,6 +1906,9 @@ public class STWGUI extends javax.swing.JFrame {
     private javax.swing.JToggleButton hintButton;
     private javax.swing.JTextField hscoreBox;
     private javax.swing.JLabel hscoreLabel;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel mainTitle;
     private javax.swing.JButton newButton;
@@ -1910,4 +1942,5 @@ public class STWGUI extends javax.swing.JFrame {
     private javax.swing.JToggleButton usedY;
     private javax.swing.JToggleButton usedZ;
     // End of variables declaration//GEN-END:variables
+    //</editor-fold>
 }

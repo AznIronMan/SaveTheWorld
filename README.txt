@@ -1,7 +1,7 @@
-=====================================
-SAVE THE WORLD by Geoff Clark
-VERSION ALPHA 0.0.2 / 2020.11.15.2218
-=====================================
+=================---====================
+SAVE THE WORLD by ClarkTribeGames
+VERSION ALPHA v0.0.003 / 2020.12.02-0106
+==============---=======================
 
 This program was written with JDK 1.8.  It does require a minimum of JRE 52 to run.
 
@@ -31,7 +31,7 @@ Placeholder data for alpha testing.
 
 =========================
 
-HOW TO ADD CUSTOM CATEGORIES
+HOW TO ADD CUSTOM CATEGORIES (TO BE REPLACED WITH FILE MENU OPTION)
 
 Create a new text file with the title of the Category in the first line.  Every line
 after that will be considered a possible phrase for the game.
@@ -68,15 +68,37 @@ This game was a revamp of the code built by Geoff Clark was rebuilt as a new
 game.  There was a revamp of all the code including dozens of additions for this 
 free release version.  (IN PROGRESS)
 
+The game is now under development through ClarkTribeGames as of 2020.12.01.
+
 Copy of this code without the content of the Author is prohibited.
 
-Contact the author:  gclark82@gmail.com
+Contact the author:  info@clarktribegames.com
 
 ====================================
 
 RELEASE NOTES
 
-alpha v0.0.2 / 2020.11.15.2218
+ALPHA v0.0.003 / 2020.12.02-0106
+
+- rebranded under ClarkTribeGames
+- created new main menu
+- imported bundled methods for ClarkTribeGame standards
+- created greeting box with custom greeting variable
+- created last used data holder and the game pulls from that to greet the player
+- new score file
+- new high score file - renamed heroes of fame
+- created buttons for new game (save the world), change hero (change player), heroes of fame (high scores), about, donate, and exit
+- made about, donate, and exit fully functional
+- put old gui as place holder for new game
+- exit button asks if you want to exit
+- added file check/dir check and build if not existing
+- moved score resetter
+- added version checker and update redirect if not current
+- added logging with log files for troubleshooting
+- added variable based naming for windows and various other features for portablity
+- skeleton for file menu options added
+
+ALPHA v0.0.002 / 2020.11.15.2218
 
 -implemented category drop down that finds txt files to generate phrase files from
 -removed hard coded 3 categories and buttons
@@ -87,7 +109,7 @@ alpha v0.0.2 / 2020.11.15.2218
 -removed used draw for miss count 5.
 -updated some wording to reflect new narrative of saving the world.
 
-alpha v0.0.1 / 2020.11.15.1630
+ALPHA v0.0.001 / 2020.11.15.1630
 
 - initial baseline commit
 - converted from og code to be rewritten for commercial release
