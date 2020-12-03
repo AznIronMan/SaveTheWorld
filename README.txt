@@ -92,7 +92,6 @@ ALPHA v0.0.004 / 2020.12.02-2311
 - added over 72k quotes from a free quotes database as default phrases
 - quotes will be embedded into the releases
 - added ability to switch players and add new players from main menu
-- 
 
 ALPHA v0.0.003 / 2020.12.02-0106
 
