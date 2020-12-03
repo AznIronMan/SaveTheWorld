@@ -24,7 +24,7 @@ public class LogWriter {
         String logDir = (".\\logs\\");
         String logFile = ("error_" + (logDateTime(0)) + ".log");
         new ChecksBalances().newdirCheck(logDir, false);
-        new ChecksBalances().newfileCheck(logDir + logFile, false, "");
+        new ChecksBalances().newfileCheck(logDir + logFile, false, "",false);
         boolean append = true;
         FileHandler logHandler = new FileHandler(logDir + logFile, append);
         Logger logger = Logger.getLogger(logFile);

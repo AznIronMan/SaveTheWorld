@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -30,15 +32,16 @@ public class StartGUI extends javax.swing.JFrame {
 
     //<editor-fold defaultstate="collapsed" desc="Initial Variables">
     String appName = "Save The World";
-    String appVer = "0.0.004";
+    String appVer = "0.0.005";
     String packagename = (((GameGUI.class).toString()).replaceAll("class ", ""))
-            .replaceAll(".STWGUI", "");
+            .replaceAll(".GameGUI", "");
     String playerName = "Earthling";
     int playerScore = 0;
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="GUI Launcher">
     public StartGUI() throws Exception {
+        checkLibs();
         initComponents();
         setLocationRelativeTo(null);
         startupChecks();
@@ -239,10 +242,10 @@ public class StartGUI extends javax.swing.JFrame {
     private void topscoreButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_topscoreButtonActionPerformed
         try {
             topscoreButton();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             try {
                 logFile("severe","HOF Button Error.  Exception: " + ex);
-            } catch (IOException ex1) {
+            } catch (Exception ex1) {
                 ex1.printStackTrace();
             }
         }
@@ -310,7 +313,7 @@ public class StartGUI extends javax.swing.JFrame {
         try {
             checkVersion(appName,appName.replaceAll(" ",""),appVer);
             checkFiles();
-            setPlayer(getPlayer());
+            setPlayer(getPlayerinfo(0));
             } catch(Exception ex) {
                 logFile("severe",("Startup Check Exception: " + ex.toString()));
             }
@@ -326,20 +329,30 @@ public class StartGUI extends javax.swing.JFrame {
     
     private void checkFiles() throws IOException, Exception {
         try {
-            ChecksBalances.ifexistDelete("data/Score.dat");
             new ChecksBalances().newdirCheck("./phrases/", false);
             new ChecksBalances().newdirCheck("./data/", true);
             new ChecksBalances().newfileCheck("data/.lastused", true, "Earthlin"
-                    + "g,0\n");
+                    + "g,0\n",true);
             new ChecksBalances().newfileCheck("data/Players.dat", true, "Earthl"
-                    + "ing,0\n");
-            new ChecksBalances().newfileCheck("data/Score.dat", true, "Earthlin"
-                    + "g,0\n"
-                    + "");
-            new ChecksBalances().newfileCheck("data/High.dat", true, "");
+                    + "ing,0",true);
+            gettopScores(false);
             defaultquotesFile("./data/","quotes");
         } catch(Exception ex) {
             logFile("severe",("Saves Check Exception: " + ex.toString()));
+        }
+    }
+    
+    private void checkLibs() throws IOException {
+        try {
+            boolean result = (new LibImport().libImport());
+            if(!result) {
+                JOptionPane.showMessageDialog(null,"Initializing Default Databa"
+                        + "se.\n\nPlease restart the game.","Alert!",JOptionPane
+                        .WARNING_MESSAGE);
+                exitProcess();
+            }
+        } catch(IOException ex) {
+            logFile("severe",("checkLib IOException: " + ex.toString()));
         }
     }
     
@@ -354,32 +367,45 @@ public class StartGUI extends javax.swing.JFrame {
         }
     }
     
-    public String getPlayer() throws IOException {
+    public String getPlayerinfo(int type) throws IOException {
         File filename = new File("data/.lastused");
         try {
             playerName = new ChecksBalances().getLast(filename);
-            
         } catch(IOException ex) {
             logFile("severe",("Retrieve Player IOException: " + ex.toString()));
         }
+        String playerScorestr = (playerName.substring(playerName.indexOf(",") +1
+                ,playerName.length()));
         playerName = playerName.substring(0, playerName.indexOf(','));
+        if(type == 1) {
+            return playerScorestr;
+        }
         return playerName;
     }
-    
-    private void setPlayer(String name) {
+        
+    private void setPlayer(String name) throws IOException {
         nameLabel.setText("<Current Hero: " + name + ">");
+        playerScore = Integer.parseInt(getPlayerinfo(1));
     }
     
     private void buildPlayers() throws IOException, Exception {
+        String playerString = "";
         try {
-            String playerString = playerPopup();
+            playerString = playerPopup();
+        } catch (Exception ex) {
+            
+//            logFile("severe",("Build Player IOException: " + ex.toString()));
+            JOptionPane.showMessageDialog(null,"You decided not to give a name."
+                    + "..  So we will just go with Earthling.");
+            String path = "./data/Players.dat";
+            String delim = "\n";
+            playerString = listitemFinder(new Converters().filelistToList(path,
+                    delim),"Earthling");
+        }
             playerName = playerString.substring(0, playerString.indexOf(','));
             playerScore = Integer.parseInt(playerString.substring(playerString
-                    .indexOf(',') +1,playerString.length()));
+                    .indexOf(',') + 1,playerString.length()));
             resetLastUsed(playerName,playerScore);
-        } catch (Exception ex) {
-            logFile("severe",("Build Player IOException: " + ex.toString()));
-        }
     }
     
     private void resetLastUsed(String name, int score) throws IOException, 
@@ -388,7 +414,7 @@ public class StartGUI extends javax.swing.JFrame {
             cleanUp();
             ChecksBalances.ifexistDelete("data/.lastused");
             new ChecksBalances().newfileCheck("data/.lastused", true, (name + ""
-                    + "," +score));
+                    + "," +score),true);
             resetGUI();
         } catch (Exception ex) {
             logFile("severe",("Reset LU Exception: " + ex.toString()));
@@ -430,7 +456,11 @@ public class StartGUI extends javax.swing.JFrame {
                     + " to just want to be the default Earthling.");
             return false;
         } else {
-            if ((s != null) && (s.length() > 0)) {
+            if ((s.isEmpty() || s == (null) || s.length() <= 0)) {
+                JOptionPane.showMessageDialog(null,"You decided not to give a n"
+                        + "ame...  So we will just go with Earthling.");
+                return false;
+            } else {
                 boolean invalidChars = new ChecksBalances().nameCheck(list,s,0);
                 if (invalidChars) {
                     JOptionPane.showMessageDialog(null,"Since you decided to us"
@@ -447,13 +477,10 @@ public class StartGUI extends javax.swing.JFrame {
                         Files.write(Paths.get("data/Players.dat"), ("\n" + s + 
                                 ",0").getBytes(), StandardOpenOption.APPEND);
                         playerName = s;
+
                         return true;
                     }
                 }
-            } else {
-                JOptionPane.showMessageDialog(null,"You decided not to give a n"
-                        + "ame...  So we will just go with Earthling.");
-                return false;
             }
         }
     }
@@ -491,51 +518,80 @@ public class StartGUI extends javax.swing.JFrame {
             return (finalString.substring(1,finalString.length() -1));
         }
     
-    private void hofPopup() throws IOException {
-        String path = "./data/Players.dat";
-        String delim = "\n";
-        List playerlist = (new Converters().filelistToList(path,delim));
-        String imported = String.join(";", playerlist);
-        String[] arrayed = imported.split(";");
-        StringBuilder first = new StringBuilder();
-        for(int i = 0; i <arrayed.length; i++) {
-            first.append(arrayed[i].substring(arrayed[i].indexOf(",")+1,
-                arrayed[i].length())).append("-").append(arrayed[i].substring(0,
-                (arrayed[i].indexOf(",")))).append("\n");
-        }
-        String unsorted = first.toString();
-        String sorted = Arrays.stream(unsorted.split("\n")).map(String::valueOf)
-            .sorted().collect(Collectors.joining("\n"));
-        String[] newarray = sorted.split("\n");
-        List<String> newlist = Arrays.asList(newarray);
-        Collections.reverse(newlist);
-        String ordered = String.join(";", newlist);
-        String[] lastarray = ordered.split(";");
-        StringBuilder second = new StringBuilder();
-        int topNo = 5;
-        if(lastarray.length < 5) {
-            for(int i = 0; i < lastarray.length; i++) {
-                second.append(lastarray[i].substring(lastarray[i].indexOf("-")+1
-                    ,lastarray[i].length())).append(" (").append(lastarray[i].
-                    substring(0,lastarray[i].indexOf("-"))).append(")\n");                
-        }
-            topNo = lastarray.length;
-        } else {
-            for(int i = 0; i < 5; i++) {
-                second.append(lastarray[i].substring(lastarray[i].indexOf("-")+1
-                    ,lastarray[i].length())).append(" (").append(lastarray[i].
-                    substring(0,lastarray[i].indexOf("-"))).append(")\n");
+    private void gettopScores(boolean showPopup) throws IOException, 
+            InterruptedException {
+        try {
+            String path = "./data/Players.dat";
+            String delim = "\n";
+            String highpath = "data/High.dat";
+            List playerlist = (new Converters().filelistToList(path,delim));
+            String imported = String.join(";", playerlist);
+            String[] arrayed = imported.split(";");
+            StringBuilder first = new StringBuilder();
+            for(int i = 0; i <arrayed.length; i++) {
+                first.append(arrayed[i].substring(arrayed[i].indexOf(",")+1,
+                    arrayed[i].length())).append("-").append(arrayed[i]
+                    .substring(0,(arrayed[i].indexOf(",")))).append(delim);
             }
+            String unsorted = first.toString();
+            String sorted = Arrays.stream(unsorted.split(delim))
+                .map(String::valueOf).sorted().collect(Collectors
+                .joining(delim));
+            String[] newarray = sorted.split(delim);
+            List<String> newlist = Arrays.asList(newarray);
+            Collections.reverse(newlist);
+            String ordered = String.join(";", newlist);
+            String[] lastarray = ordered.split(";");
+            StringBuilder second = new StringBuilder();
+            int topNo = 5;
+            String highscoreString = "";
+            if(lastarray.length < 5) {
+                for(int i = 0; i < lastarray.length; i++) {
+                    second.append(lastarray[i].substring(lastarray[i]
+                    .indexOf("-")+1,lastarray[i].length())).append(" (")
+                    .append(lastarray[i].substring(0,lastarray[i].indexOf("-")))
+                    .append(")").append(delim);
+                    if(i==0) {
+                        ChecksBalances.ifexistDelete(highpath);
+                        highscoreString = ((second.toString()).replaceAll(" \\("
+                            + "", ",")).replaceAll("\\)","");
+                        new ChecksBalances().newfileCheck(highpath, true, 
+                            highscoreString.toString(),true);
+                    }
+            }
+                topNo = lastarray.length;
+            } else {
+                for(int i = 0; i < 5; i++) {
+                    second.append(lastarray[i].substring(lastarray[i]
+                    .indexOf("-")+1,lastarray[i].length())).append(" (")
+                    .append(lastarray[i].substring(0,lastarray[i].indexOf("-")))
+                    .append(")").append(delim);
+                    if(i==0) {
+                        ChecksBalances.ifexistDelete(highpath);
+                        highscoreString = ((second.toString()).replaceAll(" //("
+                            + "", ",")).replaceAll("//)","");
+                        new ChecksBalances().newfileCheck(highpath, true, 
+                            highscoreString.toString(),true);
+                    }
+                }
+            }
+            String finalList = second.toString();
+            String top = ("Top " + topNo + " Heroes:");
+            if(topNo <= 1) {
+                top = "The Only Hero:";
+            }
+            if(showPopup == true) {
+                String title = "The Heroes of Fame";
+                String message = top + "\n\n" + finalList;
+                plainpopupBox(title,message);
+            }
+        } catch (IOException | InterruptedException ex) {
+        logFile("severe","Get HOF Error.  Exception: " + ex);
         }
-        String finalList = second.toString();
-        String top = ("Top " + topNo + " Heroes:");
-        if(topNo <= 1) {
-            top = "The Only Hero:";
-        }
-        
-        
-        JOptionPane.showMessageDialog(null, top + "\n\n" + finalList, "The Hero"
-                + "es of Fame",JOptionPane.PLAIN_MESSAGE);
+    }
+    
+    private void plainpopupBox(String title, String txt) {
+        JOptionPane.showMessageDialog(null,txt,title,JOptionPane.PLAIN_MESSAGE);
     }
     
     private void messageBox() throws IOException {
@@ -570,10 +626,10 @@ public class StartGUI extends javax.swing.JFrame {
         }
     }
 
-    private void topscoreButton() throws IOException {
+    private void topscoreButton() throws IOException, InterruptedException {
         try {
-            hofPopup();
-        } catch (IOException ex) {
+            gettopScores(true);
+        } catch (Exception ex) {
             logFile("severe","HOF Button Error.  Exception: " + ex);
         }
     }

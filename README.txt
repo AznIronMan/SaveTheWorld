@@ -1,6 +1,6 @@
 =================---====================
 SAVE THE WORLD by ClarkTribeGames
-VERSION ALPHA v0.0.004 / 2020.12.02-2311
+VERSION ALPHA v0.0.005 / 2020.12.03-1358
 ==============---=======================
 
 This program was written with JDK 1.8.  It does require a minimum of JRE 52 to run.
@@ -44,7 +44,7 @@ Depending on the filename chosen, this will override the default category.
 
 =========================
 
-SCORING
+SCORING (NOT ACCURATE ANYMORE..)
 
 The Current Score is calculated based on the current session of games played.
 
@@ -56,6 +56,8 @@ Score decreases by 1 point.
 
 The High Score is the highest score obtained in one session.  This is retained
 through an external file HighScore.dat with the game files.
+
+(ACCURATE VERSION: Win score = 5 - missedcount / Lose Score = missedcount * -1)
 
 =========================
 
@@ -77,6 +79,17 @@ Contact the author:  info@clarktribegames.com
 ====================================
 
 RELEASE NOTES
+
+ALPHA v0.0.005 / 2020.12.03-1358
+
+- add player name passthrough to game gui
+- updated high score process
+- updated scoring process
+- changed scoring for wins and losses to be based on the remaining missed count
+- set built in quotes as default
+- restructured game gui for optimization
+- optimized last used player and scoring methods
+- added lib check and support
 
 ALPHA v0.0.004 / 2020.12.02-2311
 

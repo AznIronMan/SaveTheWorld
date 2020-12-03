@@ -11,10 +11,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,8 +86,8 @@ public class ChecksBalances {
            return dest;
     }
     
-    public void newfileCheck(String filepath, boolean hideorNot, String text) 
-            throws IOException {
+    public void newfileCheck(String filepath, boolean hideorNot, String text,
+            boolean checkforBlanks) throws IOException {
         try{
             File filename = new File(filepath);
             boolean exists = filename.exists();
@@ -96,10 +98,14 @@ public class ChecksBalances {
                     writer.flush();
                     writer.write(text);
                     writer.close();
-                    if(hideorNot == true) {
-                        hideFile(filename);
-                    }
                 }
+                if(checkforBlanks == true) {
+                    removeBlanks(filepath);
+                }
+                if(hideorNot == true) {
+                    hideFile(filename);
+                }
+               
             }
         } catch (IOException ex) {
             logFile("severe","NewFileCheck.  Ex: " + ex.toString());
@@ -122,10 +128,13 @@ public class ChecksBalances {
         }
     }
     
-    public static void ifexistDelete(String filepath) throws IOException {
+    public static void ifexistDelete(String filepath) throws IOException, 
+            InterruptedException {
         try {
-            Files.deleteIfExists(Paths.get(filepath));;
-        } catch(IOException ex) {
+            Thread.sleep(150);
+            System.gc();
+            Files.deleteIfExists(Paths.get(filepath));
+        } catch(Exception ex) {
             logFile("severe","Delete Existing.  IOEx: " + ex.toString());
         }
     }
@@ -168,35 +177,24 @@ public class ChecksBalances {
         return retVal;
     }    
     
-//    public String getfromFile(String gffPath, boolean gffJustfirstline, boolean 
-//            gffFirstcap) throws IOException {
-//        String text = "";
-//        System.out.println(new File(gffPath).exists());
-//        try {
-//            BufferedReader br = new BufferedReader(new FileReader(gffPath));
-//            text = br.readLine();
-//            if(gffJustfirstline == false) {
-//                StringBuilder sb = new StringBuilder();
-//                text = br.readLine();
-//                while(text != null) {
-//                    System.out.println(sb);
-//                    sb.append(text).append("\n");
-//                    text = br.readLine();
-//                }
-//            } else {
-//                br.close();
-//            }
-//        } catch(IOException ex) {
-//            logFile("severe","1stLine Error.\nIOEx: " + ex.toString());
-//        }
-//        if(gffFirstcap == true) {
-//            text = new Converters().capFirstLetter((text));
-//        }
-//        if(text == null || text.isEmpty() || text == "") {
-//            text = "default";
-//        }
-//        return text;
-//    }
+    private void removeBlanks(String filepath) throws FileNotFoundException {
+        String temppath = "data/temp.txt";    
+        Scanner file = new Scanner(new File(filepath));
+            PrintWriter writer = new PrintWriter("data/temp.txt");
+            while (file.hasNext()) {
+                String line = file.nextLine();
+                if (!line.isEmpty()) {
+                    writer.write(line);
+                    writer.write("\n");
+                }
+            }
+            file.close();
+            writer.close();
+            File file1 = new File(filepath);
+            File file2 = new File(temppath);
+            file1.delete();
+            file2.renameTo(file1);
+    }
     
     public String getLast(File filename) throws IOException {
         String last = new String();  

@@ -1,20 +1,19 @@
 package clarktribegames;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 
 // <editor-fold defaultstate="collapsed" desc="credits">
 /**
@@ -28,14 +27,17 @@ import java.util.concurrent.TimeUnit;
 
 public class GameGUI extends javax.swing.JFrame {
     
-    String appName = "Save The World";
-    String appVer = "0.0.003";
-    String packagename = (((GameGUI.class).toString()).replaceAll("class ", "")).
-            replaceAll(".STWGUI", "");
-    String defaultPath = "default.dat";
-    String cscorePath = "Score.dat";
-    String hscorePath = "HighScore.dat";
-    String logPath = "error.log";
+    String appTitle;
+    String appPackage;
+    String playerName = "Earthling";
+    String catPath = "data/quotes.dat";
+    String highPath = "data/High.dat";
+    String lastusedPath = "data/.lastused";
+    String playersPath = "data/Players.dat";
+    String firststartText = "<html><center>Click START to begin a NEW GAME.<br>"
+            + "<br>Click on RULES to learn how to play.</center></html>";
+    String newgameText = "<html><center>Click START OVER to begin a NEW GAME.<b"
+            + "r><br>Click on MAIN MENU to EXIT.</center></html>";
     int missCount = 0;
     int correctCount = 0;
     char guess;
@@ -48,61 +50,81 @@ public class GameGUI extends javax.swing.JFrame {
     String pickedPhrase = "";
     boolean isitHint = false;
     
-    public GameGUI() throws IOException {
-        
-        System.out.println(packagename);
-    
-        try {
-            initComponents();
-            datFiles();
-            scoreFiles();
-            fillCats();
-            introLook();
-        } catch (IOException ex) {
-            writeLog(ex.toString());
-        }
+    public GameGUI() throws IOException, Exception {
+        this.appTitle = new StartGUI().getTitle();
+        this.appPackage = new StartGUI().packagename;
+        initComponents();
+        setLocationRelativeTo(null);
+        yourphaseText.setText("");
+        //datFiles();
+        //fillCats();
+        introLook();
     }
     
-    public final void introLook() {
+    // <editor-fold defaultstate="collapsed" desc="Intro + Show/Hide Methods">
+    private void introLook() throws IOException {
         introText();
         hideAlpha();
-        hideCat();
-        hideCato();
+        getFields();
         newButton.setEnabled(true);
     }
     
-    public void introText() {
+    private void introText() {
         gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/" +  packagename + "/title.png")));
-        phraseWindow.setFocusable(true);
-        phraseWindow.setFont(new java.awt.Font("Tahoma", 0, 12));
-        phraseWindow.setRows(5);
-        phraseWindow.setText("\n\n\n\n\n\n\n                    C L I C K      "
-                + "    S T A R T          T O          B E G I N          G A M"
-                + " E\n\n\n                    C L I C K          A B O U T    "
-                + "      F O R          M O R E          I N F O");
-        phraseWindow.setAlignmentX(0.0F);
-        phraseWindow.setAlignmentY(0.0F);
+                getResource("/" +  appPackage + "/title.png")));
+        bottomText.setText(firststartText);
     }
     
-    public void rulesText() {
-        phraseWindow.setColumns(20);
-        phraseWindow.setRows(5);
-        phraseWindow.setFont(new java.awt.Font("Tahoma", 0, 12));
-        phraseWindow.setText("***Rules***\n(Placeholder_Info)\nGuess the phrase"
-                + " before STW ge"
-                + "ts loses!\n\nEnter an alphabet you think that is a part of th"
-                + "e answer.\n\nIf your guessing letter is correct, the blank w"
-                + "ill be replaced with the letter.\n\nIf your guessing alphabe"
-                + "t is incorrect, STW will be drawn step by step.\n\nSTW"
-                + " has FIVE tries before losing, in which, you will lose the g"
-                + "ame.\n\nGood luck!!\n\n\n\nC L I C K     S T A R T     T O  "
-                + "   B E G I N     G A M E.");
-        rulesButton.setEnabled(false);
+    private void getFields() throws IOException {
+        processFields(highPath,1,hscoreBox);
+        processFields(lastusedPath,0,playerBox);
+        processFields(lastusedPath,1,cscoreBox);
+        getCat();
     }
     
-    public void hideAlpha() {
-        usedTitle.setEnabled(false);
+    private void getCat() {
+        if(catPath.equals("data/quotes.dat")) {
+            catBox.setText("Famous Quotes");
+        } else {
+            catBox.setText(processcatName(catPath));
+        }
+    }
+    
+    private String processcatName(String filepath) {
+        String[] filenamearray;
+        if(filepath.contains("/")) {
+            filenamearray = filepath.split("\\/",0);
+            filepath = filenamearray[filenamearray.length - 1];
+        }
+        if(filepath.contains("\\")) {
+            filenamearray = filepath.split("\\\\",0);
+            filepath = filenamearray[filenamearray.length - 1];
+        }
+        if(filepath.contains(".")) {
+            filenamearray = filepath.split("\\.",0);
+            filepath = filenamearray[filenamearray.length - 2];
+        }
+        return (new Converters().capFirstLetter(filepath));
+    }
+    
+    private void processFields(String filePath,int playerorScore,JTextField box)
+            throws IOException {
+        try {
+            File filename = new File (filePath);
+            String string = (new ChecksBalances().getLast(filename));
+            String player = string.substring(0,string.indexOf(','));
+            String score = string.substring(string.indexOf(',') + 1,string.length());
+            if(playerorScore == 1) {
+                box.setText(score);
+            } else {
+                box.setText(player);
+            }
+        } catch (IOException ex) {
+            logFile("severe","Process Fields Error.  Ex: " + ex);
+        }
+    }
+    
+    private void hideAlpha() {
         usedA.setSelected(true);
         usedB.setSelected(true);
         usedC.setSelected(true);
@@ -158,8 +180,7 @@ public class GameGUI extends javax.swing.JFrame {
         hintButton.setEnabled(false);                
     }
     
-    public void showAlpha() {
-        usedTitle.setEnabled(true);
+    private void showAlpha() {
         usedA.setSelected(false);
         usedB.setSelected(false);
         usedC.setSelected(false);
@@ -216,7 +237,7 @@ public class GameGUI extends javax.swing.JFrame {
         newButton.setEnabled(true);
     }
 
-    public void disableAlpha() {
+    private void disableAlpha() {
         usedA.setFocusable(false);
         usedB.setFocusable(false);
         usedC.setFocusable(false);
@@ -271,72 +292,16 @@ public class GameGUI extends javax.swing.JFrame {
         usedZ.setEnabled(false);
         hintButton.setEnabled(false);                
     }
-
-    public void hideCscore() {
-        cscoreBox.setEnabled(false);
-        cscoreLabel.setEnabled(false);
-    }
-    
-    public void showCscore() {
-        cscoreBox.setEnabled(true);
-        cscoreLabel.setEnabled(true);
-    }
-    
-    public void hideCat() {
-        catBox.setEnabled(false);
-        catLabel.setEnabled(false);
-    }
-    
-    public void showCat() {
-        catBox.setEnabled(true);
-        catLabel.setEnabled(true);
-    }
-    
-    public void hideCato() {
-        catDrop.setEnabled(false);
-        catCButton.setEnabled(false);
-    }
-    
-    public void showCato() {
-        phraseWindow.setText("Use the drop down and select the genre and then c"
-                + "lick CONFIRM.");
-        catDrop.setEnabled(true);
-        catCButton.setEnabled(true);
-    }
-    
-    public void restartGUI() throws IOException {
-        try {
-            endProcesses();
-            dispose();
-            new GameGUI().setVisible(true);
-        } catch (IOException ex) {
-                writeLog(ex.toString());
-        }
-    }
-    
-    public String getLast(File filename) throws IOException {
-        String last = new String();  
-        try {
-            InputStreamReader sr = new InputStreamReader(new 
-                FileInputStream(filename));
-            BufferedReader br = new BufferedReader(sr);
-            while (br.ready()) {
-                last = br.readLine();
-            }
-        } catch (IOException ex) {
-                    writeLog(ex.toString());
-                }
-        return last;
-    }
-    
-    public void scoreChange(int change) {
+    //</editor-fold>
+   
+    private void scoreChange(int change) {
         int score = Integer.parseInt(cscoreBox.getText());
         int newScore = score + change;
         cscoreBox.setText(String.valueOf(newScore));
         checkHigh();
     }
     
-    public void checkHigh() {
+    private void checkHigh() {
         int high = Integer.parseInt(hscoreBox.getText());
         int score = Integer.parseInt(cscoreBox.getText());
         if(score > high){
@@ -344,224 +309,97 @@ public class GameGUI extends javax.swing.JFrame {
         }
     }
     
-    public void saveHigh() throws IOException {
+    private void saveHigh() throws IOException, InterruptedException {
         try {
-            File hscoreFile = new File(hscorePath);
-            int newHigh = Integer.parseInt(hscoreBox.getText());
-            int oldHigh = Integer.parseInt(getLast(hscoreFile));
-
-            if(newHigh > oldHigh){
-                String newHighScore = String.valueOf(newHigh);
-                    Files.write(Paths.get(hscorePath), ("\n" + 
-                            newHighScore).getBytes(), 
-                            StandardOpenOption.APPEND);
+            File highfile = new File(highPath);
+            int newhigh = Integer.parseInt(hscoreBox.getText());
+            String string = (new ChecksBalances().getLast(highfile));
+            String score = string.substring(string.indexOf(',') + 1,string.
+                    length());
+            int oldhigh = Integer.parseInt(score);
+            if(newhigh > oldhigh){
+                System.gc();
+                String newhighscore = String.valueOf(newhigh);
+                ChecksBalances.ifexistDelete(highPath);
+                String finalstring = playerBox.getText() +","+newhighscore;
+                System.gc();
+                new ChecksBalances().newfileCheck(highPath,true,finalstring,
+                        true);
             }
-            } catch (IOException ex) {
-                writeLog(ex.toString());
+            } catch (IOException | NumberFormatException ex) {
+                logFile("severe","Save High Score Error.  Ex: " +ex.toString());
         }
-    }
-
-    public void saveScore() throws IOException {
-        int newScore = Integer.parseInt(cscoreBox.getText());
-        String finalScore = String.valueOf(newScore);
-            try {
-                Files.write(Paths.get(cscorePath), ("\n" + 
-                        finalScore).getBytes(), StandardOpenOption.APPEND);
-            } catch (IOException ex) {
-                writeLog(ex.toString());
-            }
-        }
-
-    public class FileReader {
-        BufferedReader reader = null;
-        
-    public FileReader(String filePath) throws FileNotFoundException {
-        File file = new File(filePath);
-        FileInputStream fileStream = new FileInputStream(file);
-        InputStreamReader input = new InputStreamReader(fileStream);
-        reader = new BufferedReader(input);
-    }
-    
-    public int getLineCount() throws IOException {
-        int lineCount = 0;
-        String data;
-        while((data = reader.readLine()) != null) {
-            lineCount++;
-        }
-        return lineCount;
-    }
-}
-    
-    public final void scoreFiles() throws IOException {
-        try {
-            File hscoreFile = new File(hscorePath);
-            File cscoreFile = new File(cscorePath);
-            sfileCheck(hscoreFile);
-            sfileCheck(cscoreFile);
-            hscoreBox.setText(getLast(hscoreFile));
-            cscoreBox.setText(getLast(cscoreFile));
-            } catch (IOException ex) {
-                writeLog(ex.toString());
-            }
-    }
-    
-    public final void datFiles() throws IOException {
-        try {
-            File defaultFile = new File(defaultPath);
-            dfileCheck(defaultFile,defaultPath);
-            } catch (IOException ex) {
-                writeLog(ex.toString());
-            }
-    }
-    
-    private void dfileCheck(File filename, String resource) throws IOException {
-        try {
-            boolean exists = filename.exists();
-            if (exists == false) {
-                filename.createNewFile();
-                String body = new Scanner
-                    (GameGUI.class.getResourceAsStream(resource)).
-                        useDelimiter("\\A").next();
-                try (BufferedWriter writer = new BufferedWriter(new
-                FileWriter(filename))) {
-                    writer.flush();
-                    writer.write(body);
-                    writer.close();
-                    hideFile(filename);
-                }
-            }
-        } catch (IOException ex) {
-            writeLog(ex.toString());
-        }
-    }
-    
-    private void sfileCheck(File filename) throws IOException {
-        try{
-            boolean exists = filename.exists();
-            if (exists == false) {
-                filename.createNewFile();
-                String zero = "0";
-                try (BufferedWriter writer = new BufferedWriter(new
-                FileWriter(filename))) {
-                    writer.flush();
-                    writer.write(zero);
-                    writer.close();
-                    hideFile(filename);
-                }
-            }
-        } catch (IOException ex) {
-            writeLog(ex.toString());
-        }
-    }
-    
-    private static void hideFile(File hide) {
-        try {
-          Process p = Runtime.getRuntime().exec("attrib +H " + hide.getPath());
-          p.waitFor(); 
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-      }
-    
-    public String catName(String catPath) throws IOException {
-        String catName = "";
-        try{
-            catName = Files.readAllLines(Paths.get(catPath)).get(0);
-        } catch (IOException ex) {
-            writeLog(ex.toString());
-        }
-        return catName;
-    }
-    
-    private void fillCats() throws IOException {
-        try {
-            catCButton.setVisible(false);
-            File dir = new File(".\\");
-            FilenameFilter txt = new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return (name.endsWith(".txt") && !name.contains("README.txt"));
-                }
-            };
-            Object[] fileList = dir.list(txt);
-            catDrop.addItem(catName(defaultPath));
-            System.out.println("Here is the raw list:" + fileList[0]);
-            for (Object files : fileList) {
-                String file = files.toString();
-                String itemName = catName(file);
-                catDrop.addItem(itemName);
-            }
-        } catch (IOException ex) {
-            writeLog(ex.toString());
-        }
-    }
-    
-    private String findPath(int index) {
-        String foundPath = defaultPath;
-        File dir = new File(".\\");
-            FilenameFilter txt = new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return (name.endsWith(".txt") && !name.contains("README.txt"));
-                }
-            };
-        Object[] fileList = dir.list(txt);
-        int trueIndex = index - 1;
-        if(trueIndex >= 0) {
-                foundPath = (String) fileList[index - 1];
-        }
-        System.out.println(foundPath);
-        return foundPath;
     }
 
-    public String getPhrase(String fileName) throws FileNotFoundException, 
+    private void saveScore() throws IOException, InterruptedException {
+        try {
+            System.gc();
+            String finalstring = playerBox.getText() +","+ cscoreBox.getText();
+            ChecksBalances.ifexistDelete(lastusedPath);
+            new ChecksBalances().newfileCheck(lastusedPath, true, finalstring,
+                    true);
+            String s1 = updateLine(new Converters().filelistToList
+                ("./" + playersPath,"\n"),playerBox.getText());
+            String s2 = s1 + ", " + finalstring;
+            String newplayerslist = (s2.replaceAll(", ", "\n"));
+            System.gc();
+            ChecksBalances.ifexistDelete(playersPath);
+            new ChecksBalances().newfileCheck(playersPath,true,newplayerslist,
+                    true);
+            } catch (IOException | InterruptedException ex) {
+                logFile("severe","Save Score Error.  Ex: " +ex.toString());
+            }
+        }
+    
+    private String updateLine(List<String> list,String search) {
+            List<String> result = new ArrayList<>();
+            for (String s : list) {
+                if (!s.contains(search)) {
+                    result.add(s);
+                }
+            }
+            String finalString = (result.toString());
+            return (finalString.substring(1,finalString.length() -1));
+        }
+
+    private String getPhrase(String fileName) throws FileNotFoundException, 
             IOException {
         try {
             FileReader fileRead = new FileReader(fileName);
             Random rand = new Random();
             int randPick = rand.nextInt((fileRead.getLineCount()));
-            if (randPick < 1) {
+            if (randPick < -1) {
                 randPick = randPick + 1;
             }
             pickedPhrase = Files.readAllLines(Paths.get(fileName)).
                     get(randPick);
         } catch (IOException ex) {
-            writeLog(ex.toString());
+            logFile("severe","Get Phrase Error.  Ex: " +ex.toString());
         }
         return pickedPhrase;   
     }
     
-    public void pickCat() {
-        showCat();
-        showCscore();
-        showCato();
-        rulesButton.setEnabled(false);
+    private void startButton() throws IOException, InterruptedException {
+        yourphaseText.setText("Your Phrase is . . .");
+        bottomText.setText(newgameText);
         newButton.setText("Start Over");
         newButton.setEnabled(false);
-    }
-        
-    public void setCat(String catName, String catPath) throws IOException, 
-            InterruptedException {
         try {
-            hideCato();
-            showCat();
-            catBox.setText(catName);
-            String phrase = getPhrase(catPath);
-            startGame(phrase);
+            startGame(getPhrase(catPath));
         } catch (IOException | InterruptedException ex) {
-            writeLog(ex.toString());
+            logFile("severe","Start Button Error.  Ex: " + ex.toString());
         }
     }
     
-    public void startGame(String phrase) throws InterruptedException {
+    private void startGame(String phrase) throws InterruptedException {
         showAlpha();
         gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/" +  packagename + "/miss0.png")));
+                getResource("/" +  appPackage + "/miss0.png")));
         newButton.setEnabled(true);
         refreshPhrase(pickedPhrase,correctGuesses);
     }
     
-    public void guessingGame(char guess) throws InterruptedException {
+    private void guessingGame(char guess) throws InterruptedException {
         refreshPhrase(pickedPhrase,correctGuesses);
         lowercaseString = (pickedPhrase).toLowerCase();
         changeWorld(missCount);
@@ -601,18 +439,14 @@ public class GameGUI extends javax.swing.JFrame {
             
     }
     
-    public void refreshPhrase(String phrase, String guesses) {
+    private void refreshPhrase(String phrase, String guesses) {
         String puzzledPhrase = phraseBlanks(phrase, guesses);
-        phraseWindow.setFont(new java.awt.Font("Arial Black", 1, 12));
-        phraseWindow.setRows(5);
-        phraseWindow.setText("\n\n\nY O U R   P H R A S E   I S :\n\n\n" +
-                puzzledPhrase + "\n\n\nC L I C K   A   L E T T E R   B E L O W "
-                        + "  T O   G U E S S\n\nC L I C K   O N   H I N T   T O"
-                        + "   U S E   A   G U E S S   T O   R E V E A L   A    "
-                        + "L E T T E R");
+        phraseWindow.setFont(new java.awt.Font("Lucida Console", 1, 11));
+        phraseWindow.setRows(10);
+        phraseWindow.setText("\n\n" + puzzledPhrase);
     }
 
-    public int uniqueLetterCount(final String text) {
+    private int uniqueLetterCount(final String text) {
 	String uniqueString = "";
 	char ch;
 	for (int index = 0; index < text.length(); ++index) 
@@ -627,37 +461,37 @@ public class GameGUI extends javax.swing.JFrame {
 	return uniqueString.length();
 	}
     
-    public void changeWorld(int countMissed) {
+    private void changeWorld(int countMissed) {
         String step = String.valueOf(countMissed);
         if(step.equals("0")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  packagename + "/miss0.png")));
+            getResource("/" +  appPackage + "/miss0.png")));
         }
         if(step.equals("1")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  packagename + "/miss1.png")));
+            getResource("/" +  appPackage + "/miss1.png")));
         }
         if(step.equals("2")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  packagename + "/miss2.png")));
+            getResource("/" +  appPackage + "/miss2.png")));
         }
         if(step.equals("3")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  packagename + "/miss3.png")));
+            getResource("/" +  appPackage + "/miss3.png")));
         }
         if(step.equals("4")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  packagename + "/miss4.png")));
+            getResource("/" +  appPackage + "/miss4.png")));
             hintButton.setSelected(true);
             hintButton.setEnabled(false);
         }
         if(step.equals("5")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  packagename + "/youlose.png")));
+            getResource("/" +  appPackage + "/youlose.png")));
         }              
     }
     
-    public char hintLetter(String phrase, String letters) {
+    private char hintLetter(String phrase, String letters) {
         String hintOptions = "";
         char chAll;
         for (int index = 0; index < phrase.length(); ++index) {
@@ -691,7 +525,7 @@ public class GameGUI extends javax.swing.JFrame {
 	return hintLetter;
 	}
     
-    public String keepLetters(String fullString) {
+    private String keepLetters(String fullString) {
         String[] sa = fullString.split("\\W+");
         String lettersOnly = new String();
         for(int i = 0; i < sa.length; i++) {
@@ -700,13 +534,33 @@ public class GameGUI extends javax.swing.JFrame {
         return lettersOnly;
     }
     
-    public void displayHint() throws InterruptedException {
+    private void displayHint() throws InterruptedException {
         char hintChar = hintLetter(pickedPhrase, correctGuesses);
         findButton(hintChar);
         isitHint = true;
         guessingGame(hintChar);
     }
     
+    private void rulesButton() {
+        String title = "Save The World " + playerName + "!";
+        String message = " . . . . . . . . . . . . . . . . . Save The World! . "
+                + ". . . . . . . . . . . . . . . .\n\n" + playerName + " . . . "
+                + "\n\nYou have been chosen to save the world from the alien\nf"
+                + "orces that are trying to destory our planet!\n\nTo save our "
+                + "planet from the attacks, you must use your\nsuperior intelle"
+                + "ct to solve the word puzzles to fight\noff the alien invader"
+                + "s!\n\nIf you guess correctly, the blank will be replaced wit"
+                + "h\nthe letter.\n\nIf you guess incorrectly, the alien invade"
+                + "rs will be one\nstep close to our planet!\n\nYou are allowed"
+                + " five mistakes before the alien invaders\ndestroy our world."
+                + "\n\nIf you use the HINT button, this will give you a correct"
+                + "\nguess, but will allow the invaders one step closer.\n\nGoo"
+                + "d luck, " + playerName +"!\n\nThe fate of the world is in yo"
+                + "ur hands . . .";
+        plainpopupBox(title,message);
+    }
+    
+    // <editor-fold defaultstate="collapsed" desc="Find Method">    
     private void findButton(char c) {
         String letter = (String.valueOf(c)).toUpperCase();
         if(letter.equals("A")) {
@@ -814,8 +668,9 @@ public class GameGUI extends javax.swing.JFrame {
             usedZ.setEnabled(false);
         }
     }
+    //</editor-fold>
     
-    public String phraseBlanks(String phrase, String correctLetters) {
+    private String phraseBlanks(String phrase, String correctLetters) {
         String wordUnguessed = "";
         char ch;
         for (int index = 0; index < phrase.length(); ++index) {
@@ -839,7 +694,7 @@ public class GameGUI extends javax.swing.JFrame {
         return wordUnguessed;
     }
     
-    public String phraseRevealed(String phrase) {
+    private String phraseRevealed(String phrase) {
         String wordRevealed = "";
         char ch;
         for (int index = 0; index < phrase.length(); ++index) {
@@ -857,92 +712,70 @@ public class GameGUI extends javax.swing.JFrame {
         return wordRevealed;
     }
         
-    public void postGame(boolean wasitVictory) throws InterruptedException {
+    private void postGame(boolean wasitVictory) throws InterruptedException {
         disableAlpha();
         if (wasitVictory == true) { 
-            scoreChange(1);
+            scoreChange(5 - missCount);
             TimeUnit.SECONDS.sleep(1);
+            yourphaseText.setText("YOU HAVE SAVED THE WORLD, " + playerName + ""
+                    + "!");
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/" +  packagename + "/youwin.png")));
+                getResource("/" +  appPackage + "/youwin.png")));
         } else {
-            scoreChange(-1);
+            scoreChange(missCount * -1);
             TimeUnit.SECONDS.sleep(1);
+            yourphaseText.setText("YOU FAILED TO SAVE THE WORLD!");
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-                getResource("/" +  packagename + "/youlose.png")));
+                getResource("/" +  appPackage + "/youlose.png")));
         }
-        playAgain();        
+        playAgain(wasitVictory);        
     }
     
-    public void playAgain() {
+    private void playAgain(boolean didyouWin) {
         String revealedPhrase = phraseRevealed(pickedPhrase);
-        phraseWindow.setText("Y O U     F A I L E D !\n\n\nY O U R   P H R A S "
-                + "E   W A S :\n\n\n" + revealedPhrase + "\n\n\nC L I C K     S"
-                        + " T A R T     O V E R     T O     B E G I N     A    "
-                        + " N E W     G A M E\n\n\nC L I C K     E X I T     T "
-                        + "O     E N D     Y O U R     S E S S I O N");
+        bottomText.setText(newgameText);
+        phraseWindow.setText("\n\n" + revealedPhrase + "");
+    }
+
+    private void plainpopupBox(String title, String txt) {
+        JOptionPane.showMessageDialog(null,txt,title,JOptionPane.PLAIN_MESSAGE);
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Log + Exit Processes"> 
+
+    private void restartGUI() throws IOException, Exception {
+        try {
+            System.gc();
+            endProcesses();
+            dispose();
+            new GameGUI().setVisible(true);
+        } catch (IOException ex) {
+                logFile("severe","Restart GameGUI Error.  Ex: " +ex.toString());
+        }
     }
     
-    private void endProcesses() throws IOException {
+    private void endProcesses() throws IOException, InterruptedException {
         try{
             checkHigh();
             saveScore();
             saveHigh();
-        } catch (IOException ex) {
-            writeLog(ex.toString());
+        } catch (IOException | InterruptedException ex) {
+            logFile("severe","Game End Pros Error.  Ex: " +ex.toString());
         }
     }
     
-    private void flushOut() throws InterruptedException {
-        TimeUnit.SECONDS.sleep(2);
-        System.gc();
-        try {
-            Files.deleteIfExists(Paths.get(cscorePath));
-        } catch(IOException ex) {
-            writeLog(ex.toString());
-        }
-    }
-    
-    private void writeLog(String logInfo) {
-        try {
-            File logFile = new File(logPath);
-            logCheck(logFile);
-            Files.write(Paths.get(logPath), (logInfo + "\n").getBytes(),
-                    StandardOpenOption.APPEND);
-        } catch(IOException ex) {
-            writeLog(ex.toString());
-        }
-    }
-
-    private void logCheck(File filename) throws IOException {
-        try{
-            boolean exists = filename.exists();
-            if (exists == false) {
-                filename.createNewFile();
-                String blank = "";
-                try (BufferedWriter writer = new BufferedWriter(new
-                FileWriter(filename))) {
-                    writer.flush();
-                    writer.write(blank);
-                    writer.close();
-                    hideFile(filename);
-                }
-            }
-        } catch (IOException ex) {
-            writeLog(ex.toString());
-        }
-    }
-    
-    private void exitProcesses() throws IOException, InterruptedException {
+    private void exitButton() throws IOException, InterruptedException {
         try{
             endProcesses();
             System.gc();
-            flushOut();
             System.exit(0);
         } catch (IOException | InterruptedException ex) {
-            writeLog(ex.toString());
+            logFile("severe","Game Exit Error.  Ex: " +ex.toString());
         }
     }
-
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="Swing Code">
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -952,18 +785,16 @@ public class GameGUI extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         phraseWindow = new javax.swing.JTextArea();
         newButton = new javax.swing.JButton();
-        rulesButton = new javax.swing.JButton();
         exitButton = new javax.swing.JButton();
         cscoreLabel = new javax.swing.JLabel();
         cscoreBox = new javax.swing.JTextField();
         catLabel = new javax.swing.JLabel();
         catBox = new javax.swing.JTextField();
+        playerLabel = new javax.swing.JLabel();
+        playerBox = new javax.swing.JTextField();
         hscoreLabel = new javax.swing.JLabel();
         hscoreBox = new javax.swing.JTextField();
         hintButton = new javax.swing.JToggleButton();
-        usedTitle = new javax.swing.JLabel();
-        catDrop = new javax.swing.JComboBox<>();
-        catCButton = new javax.swing.JButton();
         usedA = new javax.swing.JToggleButton();
         usedB = new javax.swing.JToggleButton();
         usedC = new javax.swing.JToggleButton();
@@ -990,13 +821,14 @@ public class GameGUI extends javax.swing.JFrame {
         usedX = new javax.swing.JToggleButton();
         usedY = new javax.swing.JToggleButton();
         usedZ = new javax.swing.JToggleButton();
-        catLabel1 = new javax.swing.JLabel();
+        rulesButton = new javax.swing.JButton();
+        bottomText = new javax.swing.JLabel();
+        yourphaseText = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Save The World");
+        setTitle(appTitle);
         setResizable(false);
 
         mainTitle.setFont(new java.awt.Font("Stencil Std", 0, 16)); // NOI18N
@@ -1010,10 +842,9 @@ public class GameGUI extends javax.swing.JFrame {
 
         phraseWindow.setEditable(false);
         phraseWindow.setColumns(20);
-        phraseWindow.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        phraseWindow.setFont(new java.awt.Font("Lucida Console", 1, 11)); // NOI18N
         phraseWindow.setLineWrap(true);
-        phraseWindow.setRows(5);
-        phraseWindow.setText("\n\n\n\n\n\n\n                    C L I C K          S T A R T          T O          B E G I N          G A M E\n\n\n                    C L I C K          A B O U T          F O R          M O R E          I N F O");
+        phraseWindow.setRows(10);
         phraseWindow.setAlignmentX(0.0F);
         phraseWindow.setAlignmentY(0.0F);
         phraseWindow.setAutoscrolls(false);
@@ -1024,13 +855,6 @@ public class GameGUI extends javax.swing.JFrame {
         newButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 newButtonActionPerformed(evt);
-            }
-        });
-
-        rulesButton.setText("About");
-        rulesButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rulesButtonActionPerformed(evt);
             }
         });
 
@@ -1047,8 +871,10 @@ public class GameGUI extends javax.swing.JFrame {
         cscoreLabel.setFocusable(false);
 
         cscoreBox.setEditable(false);
+        cscoreBox.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         cscoreBox.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         cscoreBox.setAutoscrolls(false);
+        cscoreBox.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
         cscoreBox.setFocusable(false);
 
         catLabel.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
@@ -1057,9 +883,23 @@ public class GameGUI extends javax.swing.JFrame {
         catLabel.setFocusable(false);
 
         catBox.setEditable(false);
+        catBox.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         catBox.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         catBox.setAutoscrolls(false);
+        catBox.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
         catBox.setFocusable(false);
+
+        playerLabel.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        playerLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        playerLabel.setText("HERO");
+        playerLabel.setFocusable(false);
+
+        playerBox.setEditable(false);
+        playerBox.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        playerBox.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        playerBox.setAutoscrolls(false);
+        playerBox.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        playerBox.setFocusable(false);
 
         hscoreLabel.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         hscoreLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -1067,31 +907,16 @@ public class GameGUI extends javax.swing.JFrame {
         hscoreLabel.setFocusable(false);
 
         hscoreBox.setEditable(false);
+        hscoreBox.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         hscoreBox.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         hscoreBox.setAutoscrolls(false);
+        hscoreBox.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
         hscoreBox.setFocusable(false);
 
         hintButton.setText("Hint");
         hintButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 hintButtonActionPerformed(evt);
-            }
-        });
-
-        usedTitle.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        usedTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        usedTitle.setText("AVAILABLE CHARACTERS");
-
-        catDrop.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                catDropActionPerformed(evt);
-            }
-        });
-
-        catCButton.setText("Confirm");
-        catCButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                catCButtonActionPerformed(evt);
             }
         });
 
@@ -1355,16 +1180,25 @@ public class GameGUI extends javax.swing.JFrame {
             }
         });
 
-        catLabel1.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        catLabel1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        catLabel1.setText("CATEGORY:");
-        catLabel1.setFocusable(false);
+        rulesButton.setText("Rules");
+        rulesButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rulesButtonActionPerformed(evt);
+            }
+        });
 
-        jMenu1.setText("File");
+        bottomText.setFont(new java.awt.Font("Lucida Console", 1, 14)); // NOI18N
+        bottomText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        bottomText.setText(firststartText);
+
+        yourphaseText.setEditable(false);
+        yourphaseText.setFont(new java.awt.Font("Lucida Console", 1, 18)); // NOI18N
+        yourphaseText.setHorizontalAlignment(javax.swing.JTextField.LEFT);
+        yourphaseText.setBorder(null);
+        yourphaseText.setFocusable(false);
+
+        jMenu1.setText("Options");
         jMenuBar1.add(jMenu1);
-
-        jMenu2.setText("Edit");
-        jMenuBar1.add(jMenu2);
 
         setJMenuBar(jMenuBar1);
 
@@ -1373,210 +1207,235 @@ public class GameGUI extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(catLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(catDrop, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addComponent(usedTitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                    .addGroup(layout.createSequentialGroup()
-                                                        .addGap(10, 10, 10)
-                                                        .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                                    .addGroup(layout.createSequentialGroup()
-                                                        .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                        .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addGap(10, 10, 10)
-                                                .addComponent(hintButton, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGap(412, 412, 412)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
-                                            .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(exitButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(catCButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(rulesButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(newButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(gameBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
+                        .addComponent(mainTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 560, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(22, 22, 22)
+                        .addComponent(hscoreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(catLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(2, 2, 2)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                        .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(catBox))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                        .addComponent(hscoreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(18, 18, 18)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(mainTitle, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
-                                            .addComponent(catLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                                .addGap(18, 18, 18)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(cscoreBox, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
-                                    .addComponent(cscoreLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                        .addGap(26, 26, 26))))
+                                .addGap(177, 177, 177)
+                                .addComponent(cscoreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(playerLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(catBox, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(playerBox, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(cscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(11, 11, 11)
+                                .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(20, 20, 20)
+                                .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(10, 10, 10)
+                                .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(8, 8, 8)
+                                .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(9, 9, 9)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(exitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(hintButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 558, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(bottomText, javax.swing.GroupLayout.PREFERRED_SIZE, 423, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(17, 17, 17)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(newButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(rulesButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(22, 22, 22)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(yourphaseText, javax.swing.GroupLayout.PREFERRED_SIZE, 556, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(gameBox, javax.swing.GroupLayout.PREFERRED_SIZE, 560, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(20, 20, 20))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(mainTitle)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cscoreLabel)
+                .addGap(14, 14, 14)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(hscoreLabel)
                     .addComponent(catLabel)
-                    .addComponent(hscoreLabel))
-                .addGap(5, 5, 5)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(catBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(cscoreLabel)
+                    .addComponent(playerLabel))
+                .addGap(3, 3, 3)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(hscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(catBox, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(playerBox, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cscoreBox, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(14, 14, 14)
                 .addComponent(gameBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 249, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(catDrop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(catLabel1)
-                    .addComponent(catCButton))
-                .addGap(9, 9, 9)
-                .addComponent(usedTitle)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(newButton)
-                    .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(rulesButton)
-                    .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(5, 5, 5)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(exitButton)
-                    .addComponent(hintButton))
-                .addGap(19, 19, 19))
+                .addComponent(yourphaseText, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(14, 14, 14)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(14, 14, 14)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(bottomText, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(newButton)
+                        .addGap(7, 7, 7)
+                        .addComponent(rulesButton)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(14, 14, 14)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(usedA, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedF, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(7, 7, 7)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(usedJ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedK, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedM, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedQ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedR, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(7, 7, 7)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(usedS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedU, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(usedZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(exitButton)
+                        .addGap(7, 7, 7)
+                        .addComponent(hintButton, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="Swing Actions">    
     private void hintButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hintButtonActionPerformed
         try {
             displayHint();
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","Hint Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
         hintButton.setSelected(true);
         hintButton.setEnabled(false);
     }//GEN-LAST:event_hintButtonActionPerformed
 
-    private void rulesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rulesButtonActionPerformed
-        rulesText();
-    }//GEN-LAST:event_rulesButtonActionPerformed
-
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
         try {
-            exitProcesses();
+            exitButton();
         } catch (IOException | InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","Exit Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_exitButtonActionPerformed
 
     private void newButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newButtonActionPerformed
         String newName = newButton.getText();
         if(newName.equals("Start")) {
-            pickCat();
+            try {
+                startButton();
+            } catch (IOException | InterruptedException ex) {
+                try {
+                    logFile("severe","New Button Error.  Ex: " + ex.toString());
+                } catch (IOException ex1) {
+                    ex1.printStackTrace();
+                }
+            }
         } else {
             try {
-                restartGUI();
+                try {
+                    Thread.sleep(250);
+                    restartGUI();
+                } catch (Exception ex) {
+                    logFile("severe","NewRestart Error.  Ex: " + ex.toString());
+                }
             } catch (IOException ex) {
-                writeLog(ex.toString());
+                try {
+                    logFile("severe","New Button Error.  Ex: " + ex.toString());
+                } catch (IOException ex1) {
+                    ex1.printStackTrace();
+                }
             }
         }
     }//GEN-LAST:event_newButtonActionPerformed
@@ -1587,7 +1446,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('A');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","A Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
         
     }//GEN-LAST:event_usedAActionPerformed
@@ -1598,7 +1461,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('B');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","B Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedBActionPerformed
 
@@ -1608,7 +1475,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('C');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","C Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedCActionPerformed
 
@@ -1618,7 +1489,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('D');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","D Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedDActionPerformed
 
@@ -1628,7 +1503,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('E');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","E Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedEActionPerformed
 
@@ -1638,7 +1517,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('F');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","F Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedFActionPerformed
 
@@ -1648,7 +1531,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('G');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","G Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedGActionPerformed
 
@@ -1658,7 +1545,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('H');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","H Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedHActionPerformed
 
@@ -1668,7 +1559,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('I');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","I Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedIActionPerformed
 
@@ -1678,7 +1573,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('J');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","J Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedJActionPerformed
 
@@ -1688,7 +1587,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('K');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","K Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedKActionPerformed
 
@@ -1698,7 +1601,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('L');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","L Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedLActionPerformed
 
@@ -1708,7 +1615,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('M');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","M Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedMActionPerformed
 
@@ -1718,7 +1629,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('N');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","N Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedNActionPerformed
 
@@ -1728,7 +1643,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('O');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","O Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedOActionPerformed
 
@@ -1738,7 +1657,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('P');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","P Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedPActionPerformed
 
@@ -1748,7 +1671,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('Q');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","Q Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedQActionPerformed
 
@@ -1758,7 +1685,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('R');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","R Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedRActionPerformed
 
@@ -1768,7 +1699,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('S');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","S Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedSActionPerformed
 
@@ -1778,7 +1713,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('T');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","T Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedTActionPerformed
 
@@ -1788,7 +1727,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('U');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","U Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedUActionPerformed
 
@@ -1798,7 +1741,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('V');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","V Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedVActionPerformed
 
@@ -1808,7 +1755,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('W');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","W Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedWActionPerformed
 
@@ -1818,7 +1769,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('X');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","X Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedXActionPerformed
 
@@ -1828,7 +1783,11 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('Y');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","Y Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedYActionPerformed
 
@@ -1838,49 +1797,48 @@ public class GameGUI extends javax.swing.JFrame {
         try {
             guessingGame('Z');
         } catch (InterruptedException ex) {
-            writeLog(ex.toString());
+            try {
+                logFile("severe","Z Button Error.  Ex: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
         }
     }//GEN-LAST:event_usedZActionPerformed
 
-    private void catDropActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catDropActionPerformed
-        catCButton.setVisible(true);
-    }//GEN-LAST:event_catDropActionPerformed
+    private void rulesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rulesButtonActionPerformed
+        rulesButton();
+    }//GEN-LAST:event_rulesButtonActionPerformed
+    //</editor-fold>
 
-    private void catCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_catCButtonActionPerformed
-        int index = (int) catDrop.getSelectedIndex();
-        String catPath = findPath(index);
+    //<editor-fold defaultstate="collapsed" desc="Main Launcher Method">
+    public static void main(String args[]) {
         try {
-            setCat((catName(catPath)),catPath);
-        } catch (IOException | InterruptedException ex) {
-            writeLog(ex.toString());
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Windows".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | 
+                IllegalAccessException | 
+                javax.swing.UnsupportedLookAndFeelException ex) {
+            ex.printStackTrace();
         }
-    }//GEN-LAST:event_catCButtonActionPerformed
 
-//    public static void main(String args[]) {
-//        try {
-//            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-//                if ("Windows".equals(info.getName())) {
-//                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-//                    break;
-//                }
-//            }
-//        } catch (ClassNotFoundException | InstantiationException | 
-//                IllegalAccessException | 
-//                javax.swing.UnsupportedLookAndFeelException ex) {
-//            ex.printStackTrace();
-//        }
-//
-//        java.awt.EventQueue.invokeLater(new Runnable() {
-//            public void run() {
-//                try {
-//                    new GameGUI().setVisible(true);
-//                } catch (IOException ex) {
-//                    ex.printStackTrace();
-//                }
-//            }
-//        });
-//        
-//    }
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    new GameGUI().setVisible(true);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        
+    }
+    //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Log File Method">
     private static void logFile (String type, String loginfo) throws IOException {
@@ -1892,13 +1850,33 @@ public class GameGUI extends javax.swing.JFrame {
     }
     //</editor-fold>
 
+//<editor-fold defaultstate="collapsed" desc="FileReader Class">
+public class FileReader {
+        BufferedReader reader = null;
+        
+    public FileReader(String filePath) throws FileNotFoundException {
+        File file = new File(filePath);
+        FileInputStream fileStream = new FileInputStream(file);
+        InputStreamReader input = new InputStreamReader(fileStream);
+        reader = new BufferedReader(input);
+    }
+    
+    private int getLineCount() throws IOException {
+        int lineCount = 0;
+        String data;
+        while((data = reader.readLine()) != null) {
+            lineCount++;
+        }
+        return lineCount;
+    }
+}
+//</editor-fold>
+
     //<editor-fold defaultstate="collapsed" desc="Footer Info">
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel bottomText;
     private javax.swing.JTextField catBox;
-    private javax.swing.JButton catCButton;
-    private javax.swing.JComboBox<String> catDrop;
     private javax.swing.JLabel catLabel;
-    private javax.swing.JLabel catLabel1;
     private javax.swing.JTextField cscoreBox;
     private javax.swing.JLabel cscoreLabel;
     private javax.swing.JButton exitButton;
@@ -1907,12 +1885,13 @@ public class GameGUI extends javax.swing.JFrame {
     private javax.swing.JTextField hscoreBox;
     private javax.swing.JLabel hscoreLabel;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel mainTitle;
     private javax.swing.JButton newButton;
     private javax.swing.JTextArea phraseWindow;
+    private javax.swing.JTextField playerBox;
+    private javax.swing.JLabel playerLabel;
     private javax.swing.JButton rulesButton;
     private javax.swing.JToggleButton usedA;
     private javax.swing.JToggleButton usedB;
@@ -1934,13 +1913,13 @@ public class GameGUI extends javax.swing.JFrame {
     private javax.swing.JToggleButton usedR;
     private javax.swing.JToggleButton usedS;
     private javax.swing.JToggleButton usedT;
-    private javax.swing.JLabel usedTitle;
     private javax.swing.JToggleButton usedU;
     private javax.swing.JToggleButton usedV;
     private javax.swing.JToggleButton usedW;
     private javax.swing.JToggleButton usedX;
     private javax.swing.JToggleButton usedY;
     private javax.swing.JToggleButton usedZ;
+    private javax.swing.JTextField yourphaseText;
     // End of variables declaration//GEN-END:variables
     //</editor-fold>
 }
