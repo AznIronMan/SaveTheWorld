@@ -10,7 +10,7 @@ import javax.swing.Timer;
  * 
  * @author  Geoff Clark
  * @e-mail  info@clarktribegames.com
- * @game    Limitless
+ * @game    Save The World
  * 
  */
 // </editor-fold>

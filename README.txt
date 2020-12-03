@@ -1,6 +1,6 @@
 =================---====================
 SAVE THE WORLD by ClarkTribeGames
-VERSION ALPHA v0.0.003 / 2020.12.02-0106
+VERSION ALPHA v0.0.004 / 2020.12.02-2311
 ==============---=======================
 
 This program was written with JDK 1.8.  It does require a minimum of JRE 52 to run.
@@ -77,6 +77,22 @@ Contact the author:  info@clarktribegames.com
 ====================================
 
 RELEASE NOTES
+
+ALPHA v0.0.004 / 2020.12.02-2311
+
+- major updates to the new Main Menu GUI
+- over 150 different randomized greetings
+- added customizable player name known as "heroes"
+- added default "earthling" name if any duplicates or errors in input for names
+- redid scoring maintenances
+- added high score board -- known as the heroes of fame
+- added players list to retain players that have played
+- added last player played so the game remembers who you are and the last score you had
+- score is retained even when the application is closed now (lifetime score)
+- added over 72k quotes from a free quotes database as default phrases
+- quotes will be embedded into the releases
+- added ability to switch players and add new players from main menu
+- 
 
 ALPHA v0.0.003 / 2020.12.02-0106
 

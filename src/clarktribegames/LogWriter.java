@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.logging.Logger;
 import java.util.logging.FileHandler;
 
-
 // <editor-fold defaultstate="collapsed" desc="credits">
 /**
  * 
@@ -18,13 +17,14 @@ import java.util.logging.FileHandler;
  * 
  */
 // </editor-fold>
+
 public class LogWriter {
     
     public void writeLog(String type, String loginfo) throws IOException {
         String logDir = (".\\logs\\");
         String logFile = ("error_" + (logDateTime(0)) + ".log");
-        new FileCheck().newdirCheck(logDir, false);
-        new FileCheck().newfileCheck(logDir + logFile, false, "");
+        new ChecksBalances().newdirCheck(logDir, false);
+        new ChecksBalances().newfileCheck(logDir + logFile, false, "");
         boolean append = true;
         FileHandler logHandler = new FileHandler(logDir + logFile, append);
         Logger logger = Logger.getLogger(logFile);

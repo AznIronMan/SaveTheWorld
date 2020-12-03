@@ -14,6 +14,9 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // <editor-fold defaultstate="collapsed" desc="credits">
 /**
@@ -25,7 +28,7 @@ import java.nio.file.Paths;
  */
 // </editor-fold>
 
-public class FileCheck {
+public class ChecksBalances {
 
     public void fileCheck(String ogPath, String newPath, boolean isitStream, 
             boolean hideItOrNo) 
@@ -62,7 +65,7 @@ public class FileCheck {
            InputStream stream = null;
            OutputStream resStreamOut = null;
            try {
-               stream = FileCheck.class.getResourceAsStream(source);
+               stream = ChecksBalances.class.getResourceAsStream(source);
                if(stream == null) {
                    logFile("severe","Export Resource error.  Dir:  " + source);
                }
@@ -121,7 +124,7 @@ public class FileCheck {
     
     public static void ifexistDelete(String filepath) throws IOException {
         try {
-            Files.deleteIfExists(Paths.get(filepath));
+            Files.deleteIfExists(Paths.get(filepath));;
         } catch(IOException ex) {
             logFile("severe","Delete Existing.  IOEx: " + ex.toString());
         }
@@ -135,6 +138,65 @@ public class FileCheck {
             logFile("severe","HideFile Method.  Ex: " + e.toString());
         }
       }
+    
+    public boolean nameCheck(List<String> list,String name,int option) {
+        if(option == 1) {
+            return checkplayerExists(list, name);
+        } else {
+            return invalidcharCheck(name);
+        }
+    }
+
+    private boolean invalidcharCheck(String s) {
+        Pattern p = Pattern.compile("[^A-Za-z0-9]");
+        Matcher m = p.matcher(s);
+        boolean b = m.find();
+        if (b) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    private boolean checkplayerExists(List<String> list, String newname) {
+        boolean retVal = false;
+        for (String s : list) {
+            if(s.contains(newname)) {
+                retVal = true;
+            }
+        }
+        return retVal;
+    }    
+    
+//    public String getfromFile(String gffPath, boolean gffJustfirstline, boolean 
+//            gffFirstcap) throws IOException {
+//        String text = "";
+//        System.out.println(new File(gffPath).exists());
+//        try {
+//            BufferedReader br = new BufferedReader(new FileReader(gffPath));
+//            text = br.readLine();
+//            if(gffJustfirstline == false) {
+//                StringBuilder sb = new StringBuilder();
+//                text = br.readLine();
+//                while(text != null) {
+//                    System.out.println(sb);
+//                    sb.append(text).append("\n");
+//                    text = br.readLine();
+//                }
+//            } else {
+//                br.close();
+//            }
+//        } catch(IOException ex) {
+//            logFile("severe","1stLine Error.\nIOEx: " + ex.toString());
+//        }
+//        if(gffFirstcap == true) {
+//            text = new Converters().capFirstLetter((text));
+//        }
+//        if(text == null || text.isEmpty() || text == "") {
+//            text = "default";
+//        }
+//        return text;
+//    }
     
     public String getLast(File filename) throws IOException {
         String last = new String();  
