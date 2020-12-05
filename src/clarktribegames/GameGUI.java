@@ -7,13 +7,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 // <editor-fold defaultstate="collapsed" desc="credits">
 /**
@@ -29,11 +36,19 @@ public class GameGUI extends javax.swing.JFrame {
     
     String appTitle;
     String appPackage;
-    String playerName = "Earthling";
-    String catPath = "data/quotes.dat";
-    String highPath = "data/High.dat";
-    String lastusedPath = "data/.lastused";
-    String playersPath = "data/Players.dat";
+    String defaultName = "Earthling";
+    String playerName;
+    String dataDir = "data";
+    String dataPath = "./" + dataDir + "/";
+    String ogcatPath = dataDir + "/quotes.dat";
+    String catPath = dataDir + "/quotes.dat";
+    String highPath = dataDir + "/High.dat";
+    String lastusedPath = dataDir + "/.lastused";
+    String lastcatPath = dataDir + "/.lastcat";
+    String playersPath = dataDir + "/Players.dat";
+    String miscLib = dataDir + "/misc.lib";
+    String customDir = "phrases/";
+    String customExt = ".phrases";
     String firststartText = "<html><center>Click START to begin a NEW GAME.<br>"
             + "<br>Click on RULES to learn how to play.</center></html>";
     String newgameText = "<html><center>Click START OVER to begin a NEW GAME.<b"
@@ -50,22 +65,23 @@ public class GameGUI extends javax.swing.JFrame {
     String pickedPhrase = "";
     boolean isitHint = false;
     
+    
     public GameGUI() throws IOException, Exception {
         this.appTitle = new StartGUI().getTitle();
         this.appPackage = new StartGUI().packagename;
         initComponents();
         setLocationRelativeTo(null);
         yourphaseText.setText("");
-        //datFiles();
-        //fillCats();
+        customCheck(true);
         introLook();
     }
     
     // <editor-fold defaultstate="collapsed" desc="Intro + Show/Hide Methods">
-    private void introLook() throws IOException {
+    private void introLook() throws IOException, InterruptedException {
         introText();
         hideAlpha();
         getFields();
+        spotCheck(playerName);
         newButton.setEnabled(true);
     }
     
@@ -78,12 +94,13 @@ public class GameGUI extends javax.swing.JFrame {
     private void getFields() throws IOException {
         processFields(highPath,1,hscoreBox);
         processFields(lastusedPath,0,playerBox);
+        playerName = playerBox.getText();
         processFields(lastusedPath,1,cscoreBox);
         getCat();
     }
     
     private void getCat() {
-        if(catPath.equals("data/quotes.dat")) {
+        if(catPath.equals(ogcatPath)) {
             catBox.setText("Famous Quotes");
         } else {
             catBox.setText(processcatName(catPath));
@@ -113,7 +130,8 @@ public class GameGUI extends javax.swing.JFrame {
             File filename = new File (filePath);
             String string = (new ChecksBalances().getLast(filename));
             String player = string.substring(0,string.indexOf(','));
-            String score = string.substring(string.indexOf(',') + 1,string.length());
+            String score = string.substring(string.indexOf(',') + 1,string
+                    .length());
             if(playerorScore == 1) {
                 box.setText(score);
             } else {
@@ -368,8 +386,8 @@ public class GameGUI extends javax.swing.JFrame {
             FileReader fileRead = new FileReader(fileName);
             Random rand = new Random();
             int randPick = rand.nextInt((fileRead.getLineCount()));
-            if (randPick < -1) {
-                randPick = randPick + 1;
+            if (randPick < 0) {
+                randPick = 1;
             }
             pickedPhrase = Files.readAllLines(Paths.get(fileName)).
                     get(randPick);
@@ -399,7 +417,8 @@ public class GameGUI extends javax.swing.JFrame {
         refreshPhrase(pickedPhrase,correctGuesses);
     }
     
-    private void guessingGame(char guess) throws InterruptedException {
+    private void guessingGame(char guess) throws InterruptedException, 
+            IOException, Exception {
         refreshPhrase(pickedPhrase,correctGuesses);
         lowercaseString = (pickedPhrase).toLowerCase();
         changeWorld(missCount);
@@ -436,14 +455,11 @@ public class GameGUI extends javax.swing.JFrame {
 		changeWorld(5);
                 postGame(false);
             }
-            
     }
     
     private void refreshPhrase(String phrase, String guesses) {
         String puzzledPhrase = phraseBlanks(phrase, guesses);
-        phraseWindow.setFont(new java.awt.Font("Lucida Console", 1, 11));
-        phraseWindow.setRows(10);
-        phraseWindow.setText("\n\n" + puzzledPhrase);
+        phraseWindow.setText("\n" + puzzledPhrase);
     }
 
     private int uniqueLetterCount(final String text) {
@@ -514,7 +530,8 @@ public class GameGUI extends javax.swing.JFrame {
 	{
 		chHint = Character.toLowerCase(hintOptions.charAt(index));
 		String chString = Character.toString(chHint);
-		if (!hintOption.contains(chString) && Character.isLetter(chHint)) 
+		if (!hintOption.contains(chString) && 
+                        Character.isLetter(chHint)) 
 		{
 			hintOption += chHint;
 		}
@@ -534,7 +551,8 @@ public class GameGUI extends javax.swing.JFrame {
         return lettersOnly;
     }
     
-    private void displayHint() throws InterruptedException {
+    private void displayHint() throws InterruptedException, IOException, 
+            Exception {
         char hintChar = hintLetter(pickedPhrase, correctGuesses);
         findButton(hintChar);
         isitHint = true;
@@ -544,19 +562,21 @@ public class GameGUI extends javax.swing.JFrame {
     private void rulesButton() {
         String title = "Save The World " + playerName + "!";
         String message = " . . . . . . . . . . . . . . . . . Save The World! . "
-                + ". . . . . . . . . . . . . . . .\n\n" + playerName + " . . . "
-                + "\n\nYou have been chosen to save the world from the alien\nf"
-                + "orces that are trying to destory our planet!\n\nTo save our "
-                + "planet from the attacks, you must use your\nsuperior intelle"
-                + "ct to solve the word puzzles to fight\noff the alien invader"
-                + "s!\n\nIf you guess correctly, the blank will be replaced wit"
-                + "h\nthe letter.\n\nIf you guess incorrectly, the alien invade"
-                + "rs will be one\nstep close to our planet!\n\nYou are allowed"
-                + " five mistakes before the alien invaders\ndestroy our world."
-                + "\n\nIf you use the HINT button, this will give you a correct"
-                + "\nguess, but will allow the invaders one step closer.\n\nGoo"
-                + "d luck, " + playerName +"!\n\nThe fate of the world is in yo"
-                + "ur hands . . .";
+            + ". . . . . . . . . . . . . . . .\n\n" + playerName + " . . . \n\n"
+            + "You have been chosen to save the world from the alien\nforces th"
+            + "at are trying to destory our planet!\n\nTo save our planet from "
+            + "the attacks, you must use your\nsuperior intellect to solve the "
+            + "word puzzles to fight\noff the alien invaders!\n\nIf you guess c"
+            + "orrectly, the blank will be replaced with\nthe letter.\n\nIf you"
+            + " guess incorrectly, the alien invaders will be one\nstep close t"
+            + "o our planet!\n\nYou are allowed five mistakes before the alien "
+            + "invaders\ndestroy our world.\n\nIf you use the HINT button, this"
+            + " will give you a correct\nguess, but will allow the invaders one"
+            + " step closer.\n\nIn victory, the Hero will be awarded the number"
+            + " of\nremaining guesses as points.\n\nIn defeat, the Hero will lo"
+            + "se five points.\n\nQuitting during a round will result in an aut"
+            + "omatic loss.\n\nGood luck, " + playerName + "!\n\nThe fate of th"
+            + "e world is in your hands . . .";
         plainpopupBox(title,message);
     }
     
@@ -673,16 +693,26 @@ public class GameGUI extends javax.swing.JFrame {
     private String phraseBlanks(String phrase, String correctLetters) {
         String wordUnguessed = "";
         char ch;
+        int counter = 0;
         for (int index = 0; index < phrase.length(); ++index) {
             ch = Character.toLowerCase(phrase.charAt(index));
             String chString = Character.toString(ch);
+            if(chString.contains("-")) {
+                wordUnguessed += "\n\n" + "-";
+            } else {
             
             if (!Character.isLetter(ch)) {
                 wordUnguessed += ch;
             }
             
+            
             if (Character.isLetter(ch) && !correctLetters.contains(chString)) {
-                wordUnguessed += "_";
+                if(counter == 0 || counter %2 == 0) {
+                    wordUnguessed += "_";
+                } else {
+                    wordUnguessed += " _ ";
+                }
+                counter += 1;
             }
             if (Character.isLetter(ch) && correctLetters.contains(chString)) {
 		wordUnguessed += phrase.charAt(index);
@@ -690,8 +720,14 @@ public class GameGUI extends javax.swing.JFrame {
             if (index < phrase.length() - 1) {
                 wordUnguessed += " ";
             }
+            }
 	}
-        return wordUnguessed;
+        String s1 = wordUnguessed.replaceAll("   ", "\\~");
+        String s2 = s1.replaceAll(" _ ", "===");
+        String s3 = s2.replaceAll(" ","");
+        String s4 = s3.replaceAll("===", " _ ");
+        String finalUnguessed = s4.replace("~"," ");
+        return finalUnguessed;
     }
     
     private String phraseRevealed(String phrase) {
@@ -699,6 +735,10 @@ public class GameGUI extends javax.swing.JFrame {
         char ch;
         for (int index = 0; index < phrase.length(); ++index) {
             ch = phrase.charAt(index);
+            String chString = Character.toString(ch);
+            if(chString.contains("-")) {
+                wordRevealed += "\n\n" + "-";
+            } else {
             if (!Character.isLetter(ch)) {
                 wordRevealed += ch;
             }
@@ -709,10 +749,15 @@ public class GameGUI extends javax.swing.JFrame {
                 wordRevealed += " ";
             }
 	}
-        return wordRevealed;
+        }
+        String s1 = wordRevealed.replaceAll("   ", "\\~");
+        String s2 = s1.replaceAll(" ","");
+        String finalReveal = s2.replace("~"," ");
+        return finalReveal;
     }
         
-    private void postGame(boolean wasitVictory) throws InterruptedException {
+    private void postGame(boolean wasitVictory) throws InterruptedException, 
+            IOException, Exception {
         disableAlpha();
         if (wasitVictory == true) { 
             scoreChange(5 - missCount);
@@ -721,24 +766,302 @@ public class GameGUI extends javax.swing.JFrame {
                     + "!");
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
                 getResource("/" +  appPackage + "/youwin.png")));
+            newButton.setText("Play Again");
         } else {
             scoreChange(missCount * -1);
-            TimeUnit.SECONDS.sleep(1);
+            Thread.sleep(1000);
             yourphaseText.setText("YOU FAILED TO SAVE THE WORLD!");
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
                 getResource("/" +  appPackage + "/youlose.png")));
+            newButton.setText("Play Again");
+            newMenu.setText("Play Again");
+            customCheck(true);
+            importMenu.setEnabled(true);
         }
-        playAgain(wasitVictory);        
+        gentleClose();
+        playAgain();        
     }
     
-    private void playAgain(boolean didyouWin) {
+    private void exitwithPenalty() {
+        scoreChange(-5);
+    }
+    
+    private void spotCheck(String playername) throws IOException, 
+            InterruptedException {
+        File miscfile = new File(miscLib);
+        boolean miscexists = miscfile.exists();
+        String dataname = null;
+        String libname = null;
+        if(miscexists) {
+            dataname = new ChecksBalances().getFirstLine(miscfile);
+            libname = "data/" + dataname + ".pen";
+            new ChecksBalances().newfileCheck((libname), true, 
+                    playername, true);
+            gentleClose();
+        } else {
+            dataname = playerName;
+            libname = "data/" + dataname + ".pen";
+        }
+        File libfile = new File(libname);
+        boolean libexists = libfile.exists();
+        if(libexists) {
+            if(playerName.equals(dataname)) {
+                String title = "Improper Close";
+                String message = "Looks like you did an improper shut down duri"
+                        + "ng a game.\n\nUnfortunately, there's a 5 point penal"
+                        + "ty for that.\n\nPlease be more careful, " + 
+                        playerName;
+                plainpopupBox(title,message);
+                scoreChange(-5);
+                System.gc();
+                ChecksBalances.ifexistDelete(libname);
+            }
+        }
+    }
+    
+    private void gentleOpen() throws IOException {
+        new ChecksBalances().newfileCheck(miscLib,true,playerName,true);
+    }
+    
+    private void gentleClose() throws IOException, InterruptedException {
+        System.gc();
+        ChecksBalances.ifexistDelete(miscLib);
+    }
+    
+    private void playAgain() {
         String revealedPhrase = phraseRevealed(pickedPhrase);
         bottomText.setText(newgameText);
-        phraseWindow.setText("\n\n" + revealedPhrase + "");
+        phraseWindow.setText("\n" + revealedPhrase + "");
     }
 
     private void plainpopupBox(String title, String txt) {
         JOptionPane.showMessageDialog(null,txt,title,JOptionPane.PLAIN_MESSAGE);
+    }
+    
+    private boolean yesorNo(String message, String popup) {
+        int answer = JOptionPane.showConfirmDialog(null,message,popup,
+                JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+            if(answer == JOptionPane.NO_OPTION) {
+                return false;
+            } else {
+                return true;
+            }
+    }
+    
+    private int popupResponse(String[] options, String title, String message) {
+        int response = JOptionPane.showOptionDialog(null, message, title, 
+                JOptionPane.DEFAULT_OPTION, JOptionPane.
+                PLAIN_MESSAGE,null, options, options[0]);
+        return response;
+    }
+    
+    private void menuOption() throws IOException, Exception {
+        try {
+            endProcesses();
+            dispose();
+            new StartGUI().setVisible(true);
+        } catch(IOException ex) {
+            logFile("severe","MenuOption Error.\nIOEx: " + ex.toString());
+        }
+    }
+    
+    private void customCheck(boolean justCheck) throws IOException, 
+            InterruptedException, Exception {
+        String pName = customDir.replaceAll("/", "");
+        List<Path> pathlist = new Converters().foldertoList(pName+"\\",pName);
+        String defaultpath = ogcatPath;
+        if(pathlist.size() > 0) {
+            changeMenu.setEnabled(true);
+        } else {
+            changeMenu.setEnabled(false);
+        }
+        File lastcatFile = new File(lastcatPath);
+        boolean exists = lastcatFile.exists();
+        if(!exists) {
+            new ChecksBalances().newfileCheck(lastcatPath,true,defaultpath,
+                true);
+        } else {
+            catPath = (new ChecksBalances().getLast(lastcatFile));
+            File currentcatFile = new File(catPath);
+            boolean currentExists = currentcatFile.exists();
+            if(!currentExists) {
+                System.gc();
+                ChecksBalances.ifexistDelete(lastcatPath);
+                System.gc();
+                new ChecksBalances().newfileCheck(lastcatPath,true,defaultpath,
+                    true);
+                catPath = (new ChecksBalances().getLast(lastcatFile));
+            }
+        }
+        if(!justCheck) {
+            List<String> filelist = pathlist.stream().map(p -> p.toString())
+                    .collect(Collectors.toList());
+            JComboBox customBox = new JComboBox();
+            customcomboMaker(filelist, customBox);
+            JOptionPane.showMessageDialog(null, customBox,"Change Phrase Categ"
+                    + "ory",JOptionPane.QUESTION_MESSAGE);
+            int index = customBox.getSelectedIndex();
+            if(index == 0) {
+                System.gc();
+                ChecksBalances.ifexistDelete(lastcatPath);
+                new ChecksBalances().newfileCheck(lastcatPath,true,defaultpath,
+                        true);
+            } else {
+                if(index == customBox.getItemCount() -1) {
+                    importButton(false);
+                    System.gc();
+                    ChecksBalances.ifexistDelete(lastcatPath);
+                    new ChecksBalances().newfileCheck(lastcatPath,true,catPath,
+                        true);
+                } else {
+                    String selection = customBox.getSelectedItem().toString();
+                    catPath = customDir + selection + customExt;
+                    System.gc();
+                    ChecksBalances.ifexistDelete(lastcatPath);
+                    new ChecksBalances().newfileCheck(lastcatPath,true,catPath,
+                           true);
+                }
+            }
+            restartGUI();
+        }
+    }
+    
+    private void customcomboMaker(List<String> list,JComboBox dropdown) {
+            DefaultComboBoxModel dml= new DefaultComboBoxModel();
+            Collections.sort(list);
+            dml.addElement("Famous Quotes <Default>");
+            for (int i=0; i < list.size(); i++ ) {
+                String y = (list.get(i));
+                String x;
+                x = new Converters().capFirstLetter(y.substring(y.indexOf("\\")
+                        +1,y.lastIndexOf(".")));
+                dml.addElement(x);
+                dropdown.setModel(dml);
+            }
+            dml.addElement("<Import New>");
+        }
+    
+    private void importData(boolean fromMenu, boolean roundtwo) throws IOException, 
+            InterruptedException, Exception {
+        System.out.println(fromMenu);
+        JFileChooser jf = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("All Suppo"
+            + "rted Files", "txt", "text");
+        jf.setFileFilter(filter);
+        int result;
+        int rounds = 0;
+        if(roundtwo == true) {
+            result = JFileChooser.CANCEL_OPTION;
+        } else {
+            result = jf.showOpenDialog(this);
+        }
+        if(result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = jf.getSelectedFile();
+            String newfilename = (new Converters().filenamefromPath(selectedFile
+                ,true));
+            String newPath = customDir + newfilename + customExt;
+            File newFile = new File(newPath);
+            try {
+                Files.copy(selectedFile.toPath(), newFile.toPath());
+            } catch (IOException ex) {
+                importData(fromMenu, true);
+                rounds += 1;
+            }
+            if(result == JFileChooser.APPROVE_OPTION && rounds < 1) {
+                Process p = Runtime.getRuntime().exec("attrib +H " + newFile
+                .getPath());
+                p.waitFor(); 
+                System.gc();
+                ChecksBalances.ifexistDelete(lastcatPath);
+                new ChecksBalances().newfileCheck(lastcatPath,true,newPath,
+                        true);
+                String poptitle = "Import Complete";
+                String message="Your Import is Complete.\n\n"+(new Converters()
+                    .capFirstLetter(newfilename)) + " will be your new selected"
+                    + " category.";
+                plainpopupBox(poptitle,message);
+                if(fromMenu) {
+                    restartGUI();
+                }
+                catPath = newPath;
+            }
+        } else {
+            if(rounds < 2) {
+                String poptitle = "Import Cancelled";
+                String message = "You have cancelled the import.";
+                plainpopupBox(poptitle,message);
+            }
+        }
+    }
+    
+    private void newButton() {
+        String newName = newButton.getText();
+        if(newName.equals("Start")) {
+            try {
+                gentleOpen();
+                startButton();
+                newMenu.setText("Start Over");
+                importMenu.setEnabled(false);
+                changeMenu.setEnabled(false);
+            } catch (IOException | InterruptedException ex) {
+                try {
+                    logFile("severe","New Button Error.  Ex: " + ex.toString());
+                } catch (IOException ex1) {
+                    ex1.printStackTrace();
+                }
+            }
+        } else {
+            try {
+                try {
+                    
+                    Thread.sleep(250);
+                    exitButton(true);
+                } catch (Exception ex) {
+                    logFile("severe","NewRestart Error.  Ex: " + ex.toString());
+                }
+            } catch (IOException ex) {
+                try {
+                    logFile("severe","New Button Error.  Ex: " + ex.toString());
+                } catch (IOException ex1) {
+                    ex1.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    private void changeButton() throws IOException, InterruptedException, 
+            Exception {
+        try {
+            customCheck(false);
+        } catch (IOException | InterruptedException ex) {
+            logFile("severe","Change Button IOEX: " + ex);
+        }
+    }
+    
+    private void importButton(boolean fromMenu) throws IOException, 
+            InterruptedException, Exception {
+        String title = "IMPORTANT! About Importing...";
+        String message = "Be sure when importing that the file is in .txt forma"
+                + "t and\nhas each phrase on one line (when not line wrapping)."
+                + "\n\nFiles in other formats will not work.\n\nThank you.";
+        plainpopupBox(title,message);
+        importData(fromMenu,false);
+    }
+    
+    private void aboutButton() throws Exception {
+        try {
+            new StartGUI().aboutButton();
+        } catch (Exception ex) {
+            logFile("severe", "About Button Exception" + ex.toString());
+        }
+    }
+    
+    private void donateButton() throws Exception {
+        try {
+            new StartGUI().donateButton();
+        } catch (Exception ex) {
+            logFile("severe", "Donate Button Exception" + ex.toString());
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="Log + Exit Processes"> 
@@ -756,21 +1079,81 @@ public class GameGUI extends javax.swing.JFrame {
     
     private void endProcesses() throws IOException, InterruptedException {
         try{
+            System.gc();
+            gentleClose();
+            System.gc();
             checkHigh();
+            System.gc();
             saveScore();
+            System.gc();
             saveHigh();
+            System.gc();
         } catch (IOException | InterruptedException ex) {
             logFile("severe","Game End Pros Error.  Ex: " +ex.toString());
         }
     }
     
-    private void exitButton() throws IOException, InterruptedException {
-        try{
-            endProcesses();
-            System.gc();
-            System.exit(0);
-        } catch (IOException | InterruptedException ex) {
-            logFile("severe","Game Exit Error.  Ex: " +ex.toString());
+    private void exitButton(boolean restarttheGUI) throws IOException, 
+            Exception {
+        int menuchoice;
+        boolean skipPenalty = true;
+        boolean gotPenalty = false;
+        boolean exitchoice = false;
+        String text = "Do you want to go back to the Main Menu or Exit the Game"
+                + "?";
+        String[] options = new String[] {"Back To Menu","Exit The Game"};
+
+        if(newButton.getText().toString().equals("Start Over")) {
+            skipPenalty = false;
+            String warning = "Quitting in the middle of a game will result in a"
+                    + " 5 point penalty.\nAre you sure you want to quit?";
+            String[] choices = new String [] {"Quit and Lose 5 Points","I want "
+                    + "to finish this game"};
+            int warningchoice;
+            warningchoice = popupResponse(choices, "Quit Penalty", warning);
+            if(warningchoice == 0) {
+                exitwithPenalty();
+                gotPenalty = true;
+            } else {
+                skipPenalty = false;
+                restarttheGUI = false;
+            }
+        }
+
+        if(restarttheGUI) {
+            restartGUI();
+        } else {
+            if(skipPenalty == true) {
+                exitchoice = yesorNo("Are you sure you want to exit?","Exit the"
+                        + " Game?");
+            } else {
+                if(gotPenalty == false) {
+                    exitchoice = false;
+                } else {
+                    exitchoice = true;
+                }
+            }
+            if(exitchoice == true) {
+                menuchoice = popupResponse(options, "Exit the Game?", text);
+                switch(menuchoice) {
+                case 0:
+                    try {
+                        menuOption();
+                    } catch (IOException ex) {
+                        logFile("severe","New Exit Button Error.\nIOEx: " + ex.
+                                toString());
+                        endProcesses();
+                        System.gc();
+                        System.exit(0);
+                    }
+                    break;
+                default:
+                    endProcesses();
+                    System.gc();
+                    System.exit(0);
+                    break;
+                }
+            }
         }
     }
     //</editor-fold>
@@ -824,12 +1207,24 @@ public class GameGUI extends javax.swing.JFrame {
         rulesButton = new javax.swing.JButton();
         bottomText = new javax.swing.JLabel();
         yourphaseText = new javax.swing.JTextField();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
+        gameMenubar = new javax.swing.JMenuBar();
+        optionMenu = new javax.swing.JMenu();
+        newMenu = new javax.swing.JMenuItem();
+        changeMenu = new javax.swing.JMenuItem();
+        importMenu = new javax.swing.JMenuItem();
+        rulesMenu = new javax.swing.JMenuItem();
+        aboutMenu = new javax.swing.JMenuItem();
+        donateMenu = new javax.swing.JMenuItem();
+        quitMenu = new javax.swing.JMenuItem();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle(appTitle);
         setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         mainTitle.setFont(new java.awt.Font("Stencil Std", 0, 16)); // NOI18N
         mainTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -842,9 +1237,9 @@ public class GameGUI extends javax.swing.JFrame {
 
         phraseWindow.setEditable(false);
         phraseWindow.setColumns(20);
-        phraseWindow.setFont(new java.awt.Font("Lucida Console", 1, 11)); // NOI18N
+        phraseWindow.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         phraseWindow.setLineWrap(true);
-        phraseWindow.setRows(10);
+        phraseWindow.setRows(6);
         phraseWindow.setAlignmentX(0.0F);
         phraseWindow.setAlignmentY(0.0F);
         phraseWindow.setAutoscrolls(false);
@@ -1197,10 +1592,75 @@ public class GameGUI extends javax.swing.JFrame {
         yourphaseText.setBorder(null);
         yourphaseText.setFocusable(false);
 
-        jMenu1.setText("Options");
-        jMenuBar1.add(jMenu1);
+        optionMenu.setText("Options");
 
-        setJMenuBar(jMenuBar1);
+        newMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        newMenu.setText("Start New Game");
+        newMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                newMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(newMenu);
+
+        changeMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        changeMenu.setText("Change Category");
+        changeMenu.setEnabled(false);
+        changeMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                changeMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(changeMenu);
+
+        importMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        importMenu.setText("Import Custom File");
+        importMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                importMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(importMenu);
+
+        rulesMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        rulesMenu.setText("Rules of This Game");
+        rulesMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rulesMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(rulesMenu);
+
+        aboutMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_H, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        aboutMenu.setText("About This Game");
+        aboutMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                aboutMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(aboutMenu);
+
+        donateMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        donateMenu.setText("Donate To The Cause");
+        donateMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                donateMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(donateMenu);
+
+        quitMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        quitMenu.setText("Exit to Main Menu");
+        quitMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                quitMenuActionPerformed(evt);
+            }
+        });
+        optionMenu.add(quitMenu);
+
+        gameMenubar.add(optionMenu);
+
+        setJMenuBar(gameMenubar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -1393,6 +1853,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         hintButton.setSelected(true);
         hintButton.setEnabled(false);
@@ -1400,44 +1862,20 @@ public class GameGUI extends javax.swing.JFrame {
 
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
         try {
-            exitButton();
+            exitButton(false);
         } catch (IOException | InterruptedException ex) {
             try {
                 logFile("severe","Exit Button Error.  Ex: " + ex.toString());
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_exitButtonActionPerformed
 
     private void newButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newButtonActionPerformed
-        String newName = newButton.getText();
-        if(newName.equals("Start")) {
-            try {
-                startButton();
-            } catch (IOException | InterruptedException ex) {
-                try {
-                    logFile("severe","New Button Error.  Ex: " + ex.toString());
-                } catch (IOException ex1) {
-                    ex1.printStackTrace();
-                }
-            }
-        } else {
-            try {
-                try {
-                    Thread.sleep(250);
-                    restartGUI();
-                } catch (Exception ex) {
-                    logFile("severe","NewRestart Error.  Ex: " + ex.toString());
-                }
-            } catch (IOException ex) {
-                try {
-                    logFile("severe","New Button Error.  Ex: " + ex.toString());
-                } catch (IOException ex1) {
-                    ex1.printStackTrace();
-                }
-            }
-        }
+        newButton();
     }//GEN-LAST:event_newButtonActionPerformed
 
     private void usedAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usedAActionPerformed
@@ -1451,6 +1889,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         
     }//GEN-LAST:event_usedAActionPerformed
@@ -1466,6 +1906,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        }  catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedBActionPerformed
 
@@ -1480,6 +1922,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedCActionPerformed
 
@@ -1494,6 +1938,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedDActionPerformed
 
@@ -1508,6 +1954,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedEActionPerformed
 
@@ -1522,6 +1970,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedFActionPerformed
 
@@ -1536,6 +1986,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedGActionPerformed
 
@@ -1550,6 +2002,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedHActionPerformed
 
@@ -1564,6 +2018,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedIActionPerformed
 
@@ -1578,6 +2034,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedJActionPerformed
 
@@ -1592,6 +2050,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedKActionPerformed
 
@@ -1606,6 +2066,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedLActionPerformed
 
@@ -1620,6 +2082,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedMActionPerformed
 
@@ -1634,6 +2098,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedNActionPerformed
 
@@ -1648,6 +2114,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedOActionPerformed
 
@@ -1662,6 +2130,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedPActionPerformed
 
@@ -1676,6 +2146,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedQActionPerformed
 
@@ -1690,6 +2162,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedRActionPerformed
 
@@ -1704,6 +2178,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedSActionPerformed
 
@@ -1718,6 +2194,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedTActionPerformed
 
@@ -1732,6 +2210,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedUActionPerformed
 
@@ -1746,6 +2226,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedVActionPerformed
 
@@ -1760,6 +2242,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedWActionPerformed
 
@@ -1774,6 +2258,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedXActionPerformed
 
@@ -1788,6 +2274,8 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedYActionPerformed
 
@@ -1802,12 +2290,94 @@ public class GameGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_usedZActionPerformed
 
     private void rulesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rulesButtonActionPerformed
         rulesButton();
     }//GEN-LAST:event_rulesButtonActionPerformed
+
+    private void aboutMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuActionPerformed
+        try {
+            aboutButton();
+        } catch (Exception ex) {
+            try {
+                logFile("severe","About Button Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_aboutMenuActionPerformed
+
+    private void quitMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitMenuActionPerformed
+        try {
+            exitButton(false);
+        } catch (Exception ex) {
+            try {
+                logFile("severe","Exit Button Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_quitMenuActionPerformed
+
+    private void rulesMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rulesMenuActionPerformed
+        rulesButton();
+    }//GEN-LAST:event_rulesMenuActionPerformed
+
+    private void newMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newMenuActionPerformed
+        newButton();
+    }//GEN-LAST:event_newMenuActionPerformed
+
+    private void changeMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changeMenuActionPerformed
+        try {
+            changeButton();
+        } catch (Exception ex) {
+            try {
+                logFile("severe","Change Button Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }        
+    }//GEN-LAST:event_changeMenuActionPerformed
+
+    private void importMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importMenuActionPerformed
+        try {
+            importButton(true);
+        } catch (Exception ex) {
+            try {
+                logFile("severe","Import Button Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_importMenuActionPerformed
+
+    private void donateMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_donateMenuActionPerformed
+        try {
+            donateButton();
+        } catch (Exception ex) {
+            try {
+                logFile("severe","Donate Button Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_donateMenuActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        try {
+            exitButton(false);
+        } catch (Exception ex) {
+            try {
+                logFile("severe","Exit Button Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_formWindowClosing
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Main Launcher Method">
@@ -1874,25 +2444,32 @@ public class FileReader {
 
     //<editor-fold defaultstate="collapsed" desc="Footer Info">
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem aboutMenu;
     private javax.swing.JLabel bottomText;
     private javax.swing.JTextField catBox;
     private javax.swing.JLabel catLabel;
+    private javax.swing.JMenuItem changeMenu;
     private javax.swing.JTextField cscoreBox;
     private javax.swing.JLabel cscoreLabel;
+    private javax.swing.JMenuItem donateMenu;
     private javax.swing.JButton exitButton;
     private javax.swing.JLabel gameBox;
+    private javax.swing.JMenuBar gameMenubar;
     private javax.swing.JToggleButton hintButton;
     private javax.swing.JTextField hscoreBox;
     private javax.swing.JLabel hscoreLabel;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem importMenu;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel mainTitle;
     private javax.swing.JButton newButton;
+    private javax.swing.JMenuItem newMenu;
+    private javax.swing.JMenu optionMenu;
     private javax.swing.JTextArea phraseWindow;
     private javax.swing.JTextField playerBox;
     private javax.swing.JLabel playerLabel;
+    private javax.swing.JMenuItem quitMenu;
     private javax.swing.JButton rulesButton;
+    private javax.swing.JMenuItem rulesMenu;
     private javax.swing.JToggleButton usedA;
     private javax.swing.JToggleButton usedB;
     private javax.swing.JToggleButton usedC;

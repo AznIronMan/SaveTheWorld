@@ -9,6 +9,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,11 +63,41 @@ public class Converters {
         return filetoList;
     }
     
+    public String listtoString(List<String> ogList) {
+        String[] stringlistArray = ogList.toArray(new String[0]);
+        String stringList1 = Arrays.toString(stringlistArray);
+        String stringList2 = stringList1.replaceAll("\\[", "");
+        String stringList3 = stringList2.replaceAll("\\]", "");
+        return stringList3.replaceAll(", ", "\n");
+    }
+    
     public String capFirstLetter(String tobeconvertedtoCap) {
         char ch = tobeconvertedtoCap.charAt(0);
         String convertedString = String.valueOf(ch).toUpperCase() + 
                 tobeconvertedtoCap.substring(1, tobeconvertedtoCap.length());
         return convertedString;
+    }
+    
+    public List<Path> foldertoList(String dir, String ext) throws IOException {
+        List<Path> result = new ArrayList<>();
+        String extension = "." + ext;
+        try (Stream<Path> walk = Files.walk(Paths.get(dir))) {
+            result = walk.filter(Files::isRegularFile).filter(x -> x.getFileName
+                ().toString().endsWith(extension)).collect(Collectors.toList());
+        } catch (IOException ex) {
+            logFile("severe","Folder To List Converter, Ex:" + ex.toString());
+        }
+        return result;
+    }
+    
+    public String filenamefromPath(File absolutepath,boolean noExtension) {
+        int absEnd = absolutepath.getAbsolutePath().length();
+        if(noExtension) {
+            absEnd = absolutepath.getAbsolutePath().lastIndexOf(".");
+        }
+        String filename = (absolutepath.getAbsolutePath().substring(absolutepath.
+            getAbsolutePath().lastIndexOf("\\")+1,absEnd));
+        return filename;
     }
     
     //<editor-fold defaultstate="collapsed" desc="Log File Method">

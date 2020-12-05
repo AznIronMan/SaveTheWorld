@@ -80,6 +80,23 @@ Contact the author:  info@clarktribegames.com
 
 RELEASE NOTES
 
+ALPHA v0.0.006 / 2020.12.04-2351
+
+- added menu options for both the start and game guis
+- added settings, change category, import custom file in menus
+- activated all other (except settings) menu options
+- added in quit early penalty if trying to start over or during game
+- added change category feature for imported categories
+- cleaned up a few comestic ideas around buttons
+- disabled import/change category during active games
+- added penalty if improper quit occurs during a game
+- added check to confirm penalty for specific user for improper quit
+- added check if last category was custom and no longer exists, switch default
+- added import warning notice when trying to import from menu
+- adjusted spacing for hidden and revealed letters to make it easier to read
+- added ability to delete players
+- added various checked for file integrity
+
 ALPHA v0.0.005 / 2020.12.03-1358
 
 - add player name passthrough to game gui
@@ -90,6 +107,8 @@ ALPHA v0.0.005 / 2020.12.03-1358
 - restructured game gui for optimization
 - optimized last used player and scoring methods
 - added lib check and support
+- added import category file selection (txt only)
+- added check if import attempt already exist to cancel
 
 ALPHA v0.0.004 / 2020.12.02-2311
 
@@ -146,3 +165,19 @@ ALPHA v0.0.001 / 2020.11.15.1630
 - placeholder database put in place
 
 ====================================
+
+REMAINING ITEMS TO DO BEFORE BETA
+
+// add method for music
+// option for custom music?
+// change colors of disable buttons
+// add 1-4 custom graphics for misscounts
+// add score explainable to rulesbutton
+// add icon
+// look for royalty free music for game
+// look for royalty free sounds
+// update readme
+// set to beta
+// add publisher info
+// wrap file
+// sourceforge

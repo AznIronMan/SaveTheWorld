@@ -32,11 +32,23 @@ public class StartGUI extends javax.swing.JFrame {
 
     //<editor-fold defaultstate="collapsed" desc="Initial Variables">
     String appName = "Save The World";
-    String appVer = "0.0.005";
+    String appVer = "0.0.006";
     String packagename = (((GameGUI.class).toString()).replaceAll("class ", ""))
             .replaceAll(".GameGUI", "");
     String playerName = "Earthling";
     int playerScore = 0;
+    String defaultName = "Earthling";
+    String dataDir = "data";
+    String dataPath = "./" + dataDir + "/";
+    String ogcatPath = dataDir + "/quotes.dat";
+    String catPath = dataDir + "/quotes.dat";
+    String highPath = dataDir + "/High.dat";
+    String lastusedPath = dataDir + "/.lastused";
+    String lastcatPath = dataDir + "/.lastcat";
+    String playersPath = dataDir + "/Players.dat";
+    String miscLib = dataDir + "/misc.lib";
+    String customDir = "phrases/";
+    String customExt = ".phrases";
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="GUI Launcher">
@@ -68,6 +80,13 @@ public class StartGUI extends javax.swing.JFrame {
         exitButton = new javax.swing.JButton();
         mainMenu = new javax.swing.JMenuBar();
         optionsMenu = new javax.swing.JMenu();
+        newMenu = new javax.swing.JMenuItem();
+        heroMenu = new javax.swing.JMenuItem();
+        fameMenu = new javax.swing.JMenuItem();
+        settingsMenu = new javax.swing.JMenuItem();
+        aboutMenu = new javax.swing.JMenuItem();
+        donateMenu = new javax.swing.JMenuItem();
+        exitMenu = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle(appName + " [ALPHA v" + appVer + "]");
@@ -157,6 +176,71 @@ public class StartGUI extends javax.swing.JFrame {
         });
 
         optionsMenu.setText("Options");
+
+        newMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        newMenu.setText("Save The World");
+        newMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                newMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(newMenu);
+
+        heroMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        heroMenu.setText("Change Hero");
+        heroMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                heroMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(heroMenu);
+
+        fameMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_H, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        fameMenu.setText("Heroes of Fame");
+        fameMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fameMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(fameMenu);
+
+        settingsMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        settingsMenu.setText("Settings");
+        settingsMenu.setEnabled(false);
+        settingsMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                settingsMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(settingsMenu);
+
+        aboutMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        aboutMenu.setText("About This Game");
+        aboutMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                aboutMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(aboutMenu);
+
+        donateMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        donateMenu.setText("Donate To The Cause");
+        donateMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                donateMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(donateMenu);
+
+        exitMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        exitMenu.setText("Exit The Game");
+        exitMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exitMenuActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(exitMenu);
+
         mainMenu.add(optionsMenu);
 
         setJMenuBar(mainMenu);
@@ -279,6 +363,76 @@ public class StartGUI extends javax.swing.JFrame {
         exitButton();
     }//GEN-LAST:event_exitButtonActionPerformed
 
+    private void newMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newMenuActionPerformed
+        try {
+            startButton();
+        } catch (IOException ex) {
+            try {
+                logFile("severe","New Game Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_newMenuActionPerformed
+
+    private void heroMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_heroMenuActionPerformed
+        try {
+            changeButton();
+        } catch (IOException ex) {
+            try {
+                logFile("severe","Hero Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_heroMenuActionPerformed
+
+    private void fameMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fameMenuActionPerformed
+        try {
+            topscoreButton();
+        } catch (IOException | InterruptedException ex) {
+            try {
+                logFile("severe","Fame Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_fameMenuActionPerformed
+
+    private void settingsMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_settingsMenuActionPerformed
+        settingsButton();
+    }//GEN-LAST:event_settingsMenuActionPerformed
+
+    private void aboutMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuActionPerformed
+        try {
+            aboutButton();
+        } catch (IOException ex) {
+            try {
+                logFile("severe","About Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_aboutMenuActionPerformed
+
+    private void donateMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_donateMenuActionPerformed
+        try {
+            donateButton();
+        } catch (IOException ex) {
+            try {
+                logFile("severe","Donate Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_donateMenuActionPerformed
+
+    private void exitMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuActionPerformed
+        exitButton();
+    }//GEN-LAST:event_exitMenuActionPerformed
+
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Main Launch Method">
@@ -329,14 +483,15 @@ public class StartGUI extends javax.swing.JFrame {
     
     private void checkFiles() throws IOException, Exception {
         try {
-            new ChecksBalances().newdirCheck("./phrases/", false);
-            new ChecksBalances().newdirCheck("./data/", true);
-            new ChecksBalances().newfileCheck("data/.lastused", true, "Earthlin"
-                    + "g,0\n",true);
-            new ChecksBalances().newfileCheck("data/Players.dat", true, "Earthl"
-                    + "ing,0",true);
+            new ChecksBalances().newdirCheck("./" + customDir, true);
+            new ChecksBalances().newdirCheck(dataPath, true);
+            new ChecksBalances().newfileCheck(lastusedPath, true, defaultName + 
+                ",0\n",true);
+            new ChecksBalances().newfileCheck(playersPath, true, defaultName + 
+                ",0",true);
+            new ChecksBalances().checkforBlanks(playersPath, true);
             gettopScores(false);
-            defaultquotesFile("./data/","quotes");
+            defaultquotesFile(dataPath,"quotes");
         } catch(Exception ex) {
             logFile("severe",("Saves Check Exception: " + ex.toString()));
         }
@@ -360,7 +515,7 @@ public class StartGUI extends javax.swing.JFrame {
         File quotesfile = new File((path + root) + ".dat");
         try {
             if (!quotesfile.exists()) {
-                new Unzipper().unzip(root + ".zip",path,true);
+                new Unzipper().unzip(root + ".cmp",path,true);
             }
         } catch(IOException ex) {
             logFile("severe",("Quotes File Exception: " + ex.toString()));
@@ -368,7 +523,7 @@ public class StartGUI extends javax.swing.JFrame {
     }
     
     public String getPlayerinfo(int type) throws IOException {
-        File filename = new File("data/.lastused");
+        File filename = new File(lastusedPath);
         try {
             playerName = new ChecksBalances().getLast(filename);
         } catch(IOException ex) {
@@ -392,90 +547,146 @@ public class StartGUI extends javax.swing.JFrame {
         String playerString = "";
         try {
             playerString = playerPopup();
-        } catch (Exception ex) {
-            
-//            logFile("severe",("Build Player IOException: " + ex.toString()));
+        } catch (IOException ex) {
             JOptionPane.showMessageDialog(null,"You decided not to give a name."
-                    + "..  So we will just go with Earthling.");
-            String path = "./data/Players.dat";
-            String delim = "\n";
-            playerString = listitemFinder(new Converters().filelistToList(path,
-                    delim),"Earthling");
+                    + "..  So we will just go with " + defaultName + ".");
+            reverttoDefault();
         }
+        if(playerString.equals("_+_+_")) {
+            System.gc();
+            resetGUI();
+        } else {
+            if(!playerString.equals("_-_-_")) {
+
             playerName = playerString.substring(0, playerString.indexOf(','));
             playerScore = Integer.parseInt(playerString.substring(playerString
                     .indexOf(',') + 1,playerString.length()));
             resetLastUsed(playerName,playerScore);
+            }
+        }
     }
     
     private void resetLastUsed(String name, int score) throws IOException, 
             Exception {
         try {
             cleanUp();
-            ChecksBalances.ifexistDelete("data/.lastused");
-            new ChecksBalances().newfileCheck("data/.lastused", true, (name + ""
-                    + "," +score),true);
+            ChecksBalances.ifexistDelete(lastusedPath);
+            new ChecksBalances().newfileCheck(lastusedPath, true, (name + "," +
+                    score),true);
             resetGUI();
         } catch (Exception ex) {
             logFile("severe",("Reset LU Exception: " + ex.toString()));
         }
     }
     
-    private String playerPopup() throws IOException {
+    private String deletePlayer(String player) throws IOException {
+        List<String> tlist = new Converters().filelistToList(("./"+playersPath),
+                "\n");
+        List<String> newlist = new ChecksBalances().deletePlayer(tlist,player);
+        return new Converters().listtoString(newlist);
+    }
+    
+    private String playerPopup() throws IOException, Exception {
         JComboBox playerPoplist = new JComboBox();
-        String selectedPlayer = "Earthling";
-        String path = "./data/Players.dat";
+        String selectedPlayer = defaultName;
+        String path = "./" + playersPath;
         String delim = "\n";
+        String[] options = new String[] {"Select Hero", "Create New Hero", "Del"
+                + "ete Hero"};
         comboMaker(new Converters().filelistToList(path,delim),playerPoplist,0
         );
-        JOptionPane.showMessageDialog(null, playerPoplist, "Your New Hero",
-                JOptionPane.QUESTION_MESSAGE);
-        int index = playerPoplist.getSelectedIndex();
-        if(index == 0) {
-            if(!newplayerPopup(new Converters().filelistToList(path,delim))) {
-                selectedPlayer = listitemFinder(new Converters().filelistToList(
-                path,delim),"Earthling");
-            } else {
-                selectedPlayer = listitemFinder(new Converters().filelistToList(
-                path,delim),playerName);
-            }
-        } else {
+        int newheroChoice = JOptionPane.showOptionDialog(null,playerPoplist,"Yo"
+            + "ur New Hero",JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE
+            ,null,options, options[0]);
+            int index = playerPoplist.getSelectedIndex();
+        if(newheroChoice == 0) {
             String playername = (playerPoplist.getItemAt(index)).toString();
-            selectedPlayer = listitemFinder(new Converters().filelistToList(
-                path,delim),playername);
-        }
+            selectedPlayer = listitemFinder(new Converters().filelistToList(path
+                    ,delim),playername);
+            } else {
+                if(newheroChoice == 1) {
+                    if(!newplayerPopup(new Converters().filelistToList(path,delim)))
+                    {
+                        selectedPlayer = listitemFinder(new Converters()
+                            .filelistToList(path,delim),defaultName);
+                    } else {
+                        selectedPlayer = listitemFinder(new Converters()
+                            .filelistToList(path,delim),playerName);
+                    }
+                } if(newheroChoice == 2) {
+                    if((playerPoplist.getSelectedItem().toString()).equals(defaultName)) 
+                    {
+                        plainpopupBox(defaultName + " is immortal",defaultName + " cann"
+                            + "ot be deleted!");
+                        selectedPlayer = "_+_+_";
+                    } else {
+                        String playername = (playerPoplist.getItemAt(index)).toString();
+                        selectedPlayer = listitemFinder(new Converters().filelistToList(
+                                path,delim),playername);
+                        String byebyePlayer = selectedPlayer.substring(0, selectedPlayer.indexOf(","));
+                        boolean deleteChoice = yesorNo("Are you sure you want to delete " + 
+                            byebyePlayer + " from the game?","Delete " + byebyePlayer);
+                        if(deleteChoice == true) {
+                            String listwithdelete = deletePlayer(selectedPlayer);
+                            System.gc();
+                            ChecksBalances.ifexistDelete(playersPath);
+                            new ChecksBalances().newfileCheck(playersPath, true,
+                                listwithdelete,true);
+                            plainpopupBox(byebyePlayer + " is Deleted!",byebyePlayer + " is gone forever!\n\nYou are now " + defaultName);
+                            reverttoDefault();
+                            selectedPlayer = "_-_-_";
+                        } else {
+                            selectedPlayer = "_+_+_";
+                        }
+                    }
+                } else {
+                    selectedPlayer = "_+_+_";
+                }
+            }
         return selectedPlayer;
+    }
+    
+    private void reverttoDefault() throws IOException, Exception {
+        String path = "./" + playersPath;
+        String delim = "\n";
+        String playerString = listitemFinder(new Converters()
+            .filelistToList(path,delim),defaultName);
+        playerName = playerString.substring(0, playerString.indexOf(','));
+        playerScore = Integer.parseInt(playerString.substring(playerString
+            .indexOf(',') + 1,playerString.length()));
+            resetLastUsed(playerName,playerScore);
     }
     
     private boolean newplayerPopup(List<String> list) throws IOException {        
         String s = (String)JOptionPane.showInputDialog(null,"Enter New Hero Nam"
                 + "e\n\n**No Special Characters or Spaces please**\n ","Create "
                 + "a New Hero",JOptionPane.PLAIN_MESSAGE,null,null,null);
-        if (s.equals("Earthling")) {
+        if (s.equals(defaultName)) {
             JOptionPane.showMessageDialog(null,"You are a special kind of being"
-                    + " to just want to be the default Earthling.");
+                    + " to just want to be the default " + defaultName + ".");
             return false;
         } else {
             if ((s.isEmpty() || s == (null) || s.length() <= 0)) {
                 JOptionPane.showMessageDialog(null,"You decided not to give a n"
-                        + "ame...  So we will just go with Earthling.");
+                        + "ame...  So we will just go with "+defaultName+".");
                 return false;
             } else {
                 boolean invalidChars = new ChecksBalances().nameCheck(list,s,0);
                 if (invalidChars) {
                     JOptionPane.showMessageDialog(null,"Since you decided to us"
-                            + "e special characters, we will just got with Eart"
-                            + "hling.");
+                            + "e special characters, we will just go with " +
+                            defaultName + ".");
                     return false;
                 } else {
                     boolean pExists = new ChecksBalances().nameCheck(list,s,1);
                     if (pExists) {
                         JOptionPane.showMessageDialog(null,"That name already e"
-                                + "xists, so we will just go with Earthling.");
+                                + "xists, so we will just go with " + 
+                                defaultName + ".");
                         return false;
                     } else {
-                        Files.write(Paths.get("data/Players.dat"), ("\n" + s + 
-                                ",0").getBytes(), StandardOpenOption.APPEND);
+                        Files.write(Paths.get(playersPath), ("\n" + s + ",0").
+                                getBytes(), StandardOpenOption.APPEND);
                         playerName = s;
 
                         return true;
@@ -487,7 +698,6 @@ public class StartGUI extends javax.swing.JFrame {
 
     private void comboMaker(List<String> list,JComboBox dropdown,int type) {
             DefaultComboBoxModel dml= new DefaultComboBoxModel();
-            dml.addElement("<Create New>");
             Collections.sort(list);
             for (int i=0; i < list.size(); i++ ) {
                 String listitem = (list.get(i));
@@ -521,7 +731,7 @@ public class StartGUI extends javax.swing.JFrame {
     private void gettopScores(boolean showPopup) throws IOException, 
             InterruptedException {
         try {
-            String path = "./data/Players.dat";
+            String path = "./" + playersPath;
             String delim = "\n";
             String highpath = "data/High.dat";
             List playerlist = (new Converters().filelistToList(path,delim));
@@ -633,8 +843,12 @@ public class StartGUI extends javax.swing.JFrame {
             logFile("severe","HOF Button Error.  Exception: " + ex);
         }
     }
+    
+    private void settingsButton() {
+        //future settings options go here
+    }
 
-    private void aboutButton() throws IOException {
+    public void aboutButton() throws IOException {
         try {
             aboutPopup();
         } catch(IOException ex) {
@@ -642,7 +856,7 @@ public class StartGUI extends javax.swing.JFrame {
         }
     }
 
-    private void donateButton() throws IOException {
+    public void donateButton() throws IOException {
         try {
             donatePopup();
         } catch(IOException ex) {
@@ -779,16 +993,23 @@ public class StartGUI extends javax.swing.JFrame {
 //<editor-fold defaultstate="collapsed" desc="Footer">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton aboutButton;
+    private javax.swing.JMenuItem aboutMenu;
     private javax.swing.JButton changeButton;
     private javax.swing.JButton donateButton;
+    private javax.swing.JMenuItem donateMenu;
     private javax.swing.JButton exitButton;
+    private javax.swing.JMenuItem exitMenu;
+    private javax.swing.JMenuItem fameMenu;
+    private javax.swing.JMenuItem heroMenu;
     private javax.swing.JLabel mainLogo;
     private javax.swing.JMenuBar mainMenu;
     private javax.swing.JTextArea mainText;
     private javax.swing.JLabel mainTitle;
     private javax.swing.JScrollPane maintextPane;
     private javax.swing.JLabel nameLabel;
+    private javax.swing.JMenuItem newMenu;
     private javax.swing.JMenu optionsMenu;
+    private javax.swing.JMenuItem settingsMenu;
     private javax.swing.JButton startButton;
     private javax.swing.JButton topscoreButton;
     // End of variables declaration//GEN-END:variables

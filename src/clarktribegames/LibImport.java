@@ -42,7 +42,7 @@ public class LibImport {
             if(!libCheck (".\\lib\\")) { //this means dir was not made
                 importVal = true;
             } else {
-                libCopy("lib.zip", "./"); 
+                libCopy("lib.cmp", "./"); 
                 importVal = false;
             }
         } catch(IOException ex) {

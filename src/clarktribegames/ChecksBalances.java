@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -112,6 +113,14 @@ public class ChecksBalances {
         }
     }
     
+    public void checkforBlanks(String filepath,boolean hideAfter) throws 
+            FileNotFoundException, IOException {
+        removeBlanks(filepath);
+        if(hideAfter) {
+            hideFile(new File(filepath));
+        }
+    }
+    
     public void newdirCheck(String dirpath, boolean hideorNot) throws 
             IOException {
         try {
@@ -135,7 +144,10 @@ public class ChecksBalances {
             System.gc();
             Files.deleteIfExists(Paths.get(filepath));
         } catch(Exception ex) {
-            logFile("severe","Delete Existing.  IOEx: " + ex.toString());
+            Thread.sleep(150);
+            System.gc();
+            Files.deleteIfExists(Paths.get(filepath));
+            ex.printStackTrace();
         }
     }
     
@@ -177,6 +189,16 @@ public class ChecksBalances {
         return retVal;
     }    
     
+    public List<String> deletePlayer (List<String> list, String player) {
+        List<String> newlist = new ArrayList<>();
+        for (String s : list) {
+            if(!s.contains(player)) {
+                newlist.add(s);
+            }
+        }
+        return newlist;
+    }    
+    
     private void removeBlanks(String filepath) throws FileNotFoundException {
         String temppath = "data/temp.txt";    
         Scanner file = new Scanner(new File(filepath));
@@ -194,6 +216,19 @@ public class ChecksBalances {
             File file2 = new File(temppath);
             file1.delete();
             file2.renameTo(file1);
+    }
+    
+    public String getFirstLine(File filename) throws IOException {
+        String first = new String();  
+        try {
+            InputStreamReader sr = new InputStreamReader(new 
+                FileInputStream(filename));
+            BufferedReader br = new BufferedReader(sr);
+            first = br.readLine();
+        } catch (IOException e) {
+            logFile("severe","First Line Method.  Ex: " + e.toString());
+        }
+        return first;
     }
     
     public String getLast(File filename) throws IOException {
