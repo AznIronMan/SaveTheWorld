@@ -1,6 +1,6 @@
 =================---====================
 SAVE THE WORLD by ClarkTribeGames
-VERSION ALPHA v0.0.005 / 2020.12.03-1358
+VERSION ALPHA v0.0.007 / 2020.12.05-2238
 ==============---=======================
 
 This program was written with JDK 1.8.  It does require a minimum of JRE 52 to run.
@@ -79,6 +79,14 @@ Contact the author:  info@clarktribegames.com
 ====================================
 
 RELEASE NOTES
+
+FINAL ALPHA v0.0.007 / 2020.12.05-2238
+
+- removed custom settings, not needed
+- customized the miss count graphics and added new game over art
+- added new globe icon to windows and .exe
+- fixed update URL going nowhere -- corrected
+- preparing for beta release
 
 ALPHA v0.0.006 / 2020.12.04-2351
 
@@ -168,14 +176,6 @@ ALPHA v0.0.001 / 2020.11.15.1630
 
 REMAINING ITEMS TO DO BEFORE BETA
 
-// add method for music
-// option for custom music?
-// change colors of disable buttons
-// add 1-4 custom graphics for misscounts
-// add score explainable to rulesbutton
-// add icon
-// look for royalty free music for game
-// look for royalty free sounds
 // update readme
 // set to beta
 // add publisher info

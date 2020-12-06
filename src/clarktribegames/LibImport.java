@@ -8,10 +8,11 @@ import java.io.IOException;
  * 
  * @author  Geoff Clark
  * @e-mail  info@clarktribegames.com
- * @game    Limitless
+ * @game    Save The World
  * 
  */
 // </editor-fold>
+
 public class LibImport {
     private boolean libCheck(String libDir) throws IOException {
         boolean retVal = false;

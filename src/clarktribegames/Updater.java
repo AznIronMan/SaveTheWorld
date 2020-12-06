@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
  * 
  * @author  Geoff Clark
  * @e-mail  info@clarktribegames.com
- * @game    Limitless
+ * @game    Save The World
  * 
  */
 // </editor-fold>
@@ -23,8 +23,9 @@ public class Updater {
                 + "the most current version.  You will need to update to contin"
                 + "ue.\n\nWould you like to download the latest update?";
         boolean updateNow = updateBox("Needs an Update",messageString);
+        String webName = appName.replaceAll(" ","");
         if(updateNow == true)
-            openWeb("http://svr.clarktribegames.com:19762/" + appName + ".html")
+            openWeb("http://svr.clarktribegames.com:19762/" + webName + ".html")
                     ;
         System.gc();
         System.exit(0);

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package clarktribegames;
 
 import java.io.ByteArrayOutputStream;
@@ -19,10 +14,16 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+// <editor-fold defaultstate="collapsed" desc="credits">
 /**
- *
- * @author admingec
+ * 
+ * @author  Geoff Clark
+ * @e-mail  info@clarktribegames.com
+ * @game    Save The World
+ * 
  */
+// </editor-fold>
+
 public class Converters {
     
     public List<String> resourcefileToList(String resFile) throws IOException {

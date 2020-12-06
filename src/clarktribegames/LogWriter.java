@@ -69,7 +69,5 @@ public class LogWriter {
         } 
         String string = format.format(date);
         return string;
-    }
-            
-    
+    }       
 }

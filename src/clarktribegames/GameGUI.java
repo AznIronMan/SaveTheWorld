@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,9 +14,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -64,7 +65,8 @@ public class GameGUI extends javax.swing.JFrame {
     int guessesReq = 0;
     String pickedPhrase = "";
     boolean isitHint = false;
-    
+    URL iconURL = getClass().getResource("/clarktribegames/title.png");
+    ImageIcon imageIcon = new ImageIcon(iconURL);
     
     public GameGUI() throws IOException, Exception {
         this.appTitle = new StartGUI().getTitle();
@@ -414,7 +416,7 @@ public class GameGUI extends javax.swing.JFrame {
         gameBox.setIcon(new javax.swing.ImageIcon(getClass().
                 getResource("/" +  appPackage + "/miss0.png")));
         newButton.setEnabled(true);
-        refreshPhrase(pickedPhrase,correctGuesses);
+        refreshPhrase(phrase,correctGuesses);
     }
     
     private void guessingGame(char guess) throws InterruptedException, 
@@ -477,7 +479,7 @@ public class GameGUI extends javax.swing.JFrame {
 	return uniqueString.length();
 	}
     
-    private void changeWorld(int countMissed) {
+    private void changeWorld(int countMissed) throws InterruptedException {
         String step = String.valueOf(countMissed);
         if(step.equals("0")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
@@ -503,7 +505,8 @@ public class GameGUI extends javax.swing.JFrame {
         }
         if(step.equals("5")) {
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
-            getResource("/" +  appPackage + "/youlose.png")));
+            getResource("/" +  appPackage + "/miss5.png")));
+            Thread.sleep(150);
         }              
     }
     
@@ -761,7 +764,7 @@ public class GameGUI extends javax.swing.JFrame {
         disableAlpha();
         if (wasitVictory == true) { 
             scoreChange(5 - missCount);
-            TimeUnit.SECONDS.sleep(1);
+            Thread.sleep(300);
             yourphaseText.setText("YOU HAVE SAVED THE WORLD, " + playerName + ""
                     + "!");
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
@@ -769,7 +772,7 @@ public class GameGUI extends javax.swing.JFrame {
             newButton.setText("Play Again");
         } else {
             scoreChange(missCount * -1);
-            Thread.sleep(1000);
+            Thread.sleep(150);
             yourphaseText.setText("YOU FAILED TO SAVE THE WORLD!");
             gameBox.setIcon(new javax.swing.ImageIcon(getClass().
                 getResource("/" +  appPackage + "/youlose.png")));
@@ -1219,6 +1222,7 @@ public class GameGUI extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle(appTitle);
+        setIconImage(imageIcon.getImage());
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {

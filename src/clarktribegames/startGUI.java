@@ -3,6 +3,7 @@ package clarktribegames;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -14,10 +15,12 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
-
 
 /**
  * 
@@ -32,7 +35,7 @@ public class StartGUI extends javax.swing.JFrame {
 
     //<editor-fold defaultstate="collapsed" desc="Initial Variables">
     String appName = "Save The World";
-    String appVer = "0.0.006";
+    String appVer = "0.0.007";
     String packagename = (((GameGUI.class).toString()).replaceAll("class ", ""))
             .replaceAll(".GameGUI", "");
     String playerName = "Earthling";
@@ -47,8 +50,11 @@ public class StartGUI extends javax.swing.JFrame {
     String lastcatPath = dataDir + "/.lastcat";
     String playersPath = dataDir + "/Players.dat";
     String miscLib = dataDir + "/misc.lib";
+    String greetsPath = "greets.dat";
     String customDir = "phrases/";
     String customExt = ".phrases";
+    URL iconURL = getClass().getResource("/clarktribegames/title.png");
+    ImageIcon imageIcon = new ImageIcon(iconURL);
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="GUI Launcher">
@@ -58,7 +64,6 @@ public class StartGUI extends javax.swing.JFrame {
         setLocationRelativeTo(null);
         startupChecks();
         messageBox();
-        //reminder : add options menu stuff
     }
     //</editor-fold>
 
@@ -83,7 +88,6 @@ public class StartGUI extends javax.swing.JFrame {
         newMenu = new javax.swing.JMenuItem();
         heroMenu = new javax.swing.JMenuItem();
         fameMenu = new javax.swing.JMenuItem();
-        settingsMenu = new javax.swing.JMenuItem();
         aboutMenu = new javax.swing.JMenuItem();
         donateMenu = new javax.swing.JMenuItem();
         exitMenu = new javax.swing.JMenuItem();
@@ -92,6 +96,7 @@ public class StartGUI extends javax.swing.JFrame {
         setTitle(appName + " [ALPHA v" + appVer + "]");
         setBackground(new java.awt.Color(0, 0, 0));
         setFont(new java.awt.Font("Lucida Console", 1, 12)); // NOI18N
+        setIconImage(imageIcon.getImage());
         setMinimumSize(new java.awt.Dimension(600, 800));
         setName("startFrame"); // NOI18N
         setResizable(false);
@@ -204,16 +209,6 @@ public class StartGUI extends javax.swing.JFrame {
         });
         optionsMenu.add(fameMenu);
 
-        settingsMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        settingsMenu.setText("Settings");
-        settingsMenu.setEnabled(false);
-        settingsMenu.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                settingsMenuActionPerformed(evt);
-            }
-        });
-        optionsMenu.add(settingsMenu);
-
         aboutMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         aboutMenu.setText("About This Game");
         aboutMenu.addActionListener(new java.awt.event.ActionListener() {
@@ -306,6 +301,8 @@ public class StartGUI extends javax.swing.JFrame {
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_startButtonActionPerformed
 
@@ -360,20 +357,62 @@ public class StartGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_donateButtonActionPerformed
 
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
-        exitButton();
+        try {
+            exitButton();
+        } catch (IOException ex) {
+            Logger.getLogger(StartGUI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(StartGUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_exitButtonActionPerformed
 
-    private void newMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newMenuActionPerformed
+    private void exitMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuActionPerformed
         try {
-            startButton();
-        } catch (IOException ex) {
+            exitButton();
+        } catch (IOException | InterruptedException ex) {
             try {
-                logFile("severe","New Game Menu Exception: " + ex.toString());
+                logFile("severe","Exit Button. Ex: "+ ex);
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
         }
-    }//GEN-LAST:event_newMenuActionPerformed
+    }//GEN-LAST:event_exitMenuActionPerformed
+
+    private void donateMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_donateMenuActionPerformed
+        try {
+            donateButton();
+        } catch (IOException ex) {
+            try {
+                logFile("severe","Donate Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_donateMenuActionPerformed
+
+    private void aboutMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuActionPerformed
+        try {
+            aboutButton();
+        } catch (IOException ex) {
+            try {
+                logFile("severe","About Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_aboutMenuActionPerformed
+
+    private void fameMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fameMenuActionPerformed
+        try {
+            topscoreButton();
+        } catch (IOException | InterruptedException ex) {
+            try {
+                logFile("severe","Fame Menu Exception: " + ex.toString());
+            } catch (IOException ex1) {
+                ex1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_fameMenuActionPerformed
 
     private void heroMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_heroMenuActionPerformed
         try {
@@ -389,49 +428,19 @@ public class StartGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_heroMenuActionPerformed
 
-    private void fameMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fameMenuActionPerformed
+    private void newMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newMenuActionPerformed
         try {
-            topscoreButton();
-        } catch (IOException | InterruptedException ex) {
-            try {
-                logFile("severe","Fame Menu Exception: " + ex.toString());
-            } catch (IOException ex1) {
-                ex1.printStackTrace();
-            }
-        }
-    }//GEN-LAST:event_fameMenuActionPerformed
-
-    private void settingsMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_settingsMenuActionPerformed
-        settingsButton();
-    }//GEN-LAST:event_settingsMenuActionPerformed
-
-    private void aboutMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuActionPerformed
-        try {
-            aboutButton();
+            startButton();
         } catch (IOException ex) {
             try {
-                logFile("severe","About Menu Exception: " + ex.toString());
+                logFile("severe","New Game Menu Exception: " + ex.toString());
             } catch (IOException ex1) {
                 ex1.printStackTrace();
             }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
         }
-    }//GEN-LAST:event_aboutMenuActionPerformed
-
-    private void donateMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_donateMenuActionPerformed
-        try {
-            donateButton();
-        } catch (IOException ex) {
-            try {
-                logFile("severe","Donate Menu Exception: " + ex.toString());
-            } catch (IOException ex1) {
-                ex1.printStackTrace();
-            }
-        }
-    }//GEN-LAST:event_donateMenuActionPerformed
-
-    private void exitMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuActionPerformed
-        exitButton();
-    }//GEN-LAST:event_exitMenuActionPerformed
+    }//GEN-LAST:event_newMenuActionPerformed
 
     //</editor-fold>
     
@@ -470,15 +479,18 @@ public class StartGUI extends javax.swing.JFrame {
             setPlayer(getPlayerinfo(0));
             } catch(Exception ex) {
                 logFile("severe",("Startup Check Exception: " + ex.toString()));
-            }
-        
+            }   
     }
-    
+   
     private static void checkVersion (String name, String filename, String ver) 
             throws IOException {
-        boolean needUpdate = new verCheck().checkVersion(filename, ver);
+        try {
+            boolean needUpdate = new verCheck().checkVersion(filename, ver);
         if(needUpdate == true)
             new Updater().updateMessage(name, ver);
+        } catch (IOException ex) {
+            logFile("severe","Version Check IOEX: " + ex.toString());
+        }
     }    
     
     private void checkFiles() throws IOException, Exception {
@@ -493,11 +505,11 @@ public class StartGUI extends javax.swing.JFrame {
             gettopScores(false);
             defaultquotesFile(dataPath,"quotes");
         } catch(Exception ex) {
-            logFile("severe",("Saves Check Exception: " + ex.toString()));
+            logFile("severe",("Saves Check EX: " + ex.toString()));
         }
     }
     
-    private void checkLibs() throws IOException {
+    private void checkLibs() throws IOException, InterruptedException {
         try {
             boolean result = (new LibImport().libImport());
             if(!result) {
@@ -507,7 +519,7 @@ public class StartGUI extends javax.swing.JFrame {
                 exitProcess();
             }
         } catch(IOException ex) {
-            logFile("severe",("checkLib IOException: " + ex.toString()));
+            logFile("severe",("Lib Import IOEX: " + ex.toString()));
         }
     }
     
@@ -518,7 +530,7 @@ public class StartGUI extends javax.swing.JFrame {
                 new Unzipper().unzip(root + ".cmp",path,true);
             }
         } catch(IOException ex) {
-            logFile("severe",("Quotes File Exception: " + ex.toString()));
+            logFile("severe",("Default Quotes IOEX: " + ex.toString()));
         }
     }
     
@@ -527,7 +539,7 @@ public class StartGUI extends javax.swing.JFrame {
         try {
             playerName = new ChecksBalances().getLast(filename);
         } catch(IOException ex) {
-            logFile("severe",("Retrieve Player IOException: " + ex.toString()));
+            logFile("severe",("Retrieve Player IOEX: " + ex.toString()));
         }
         String playerScorestr = (playerName.substring(playerName.indexOf(",") +1
                 ,playerName.length()));
@@ -557,11 +569,11 @@ public class StartGUI extends javax.swing.JFrame {
             resetGUI();
         } else {
             if(!playerString.equals("_-_-_")) {
-
-            playerName = playerString.substring(0, playerString.indexOf(','));
-            playerScore = Integer.parseInt(playerString.substring(playerString
-                    .indexOf(',') + 1,playerString.length()));
-            resetLastUsed(playerName,playerScore);
+                playerName = playerString.substring(0, playerString.indexOf(',')
+                );
+                playerScore = Integer.parseInt(playerString.substring(
+                    playerString.indexOf(',') + 1,playerString.length()));
+                resetLastUsed(playerName,playerScore);
             }
         }
     }
@@ -575,15 +587,20 @@ public class StartGUI extends javax.swing.JFrame {
                     score),true);
             resetGUI();
         } catch (Exception ex) {
-            logFile("severe",("Reset LU Exception: " + ex.toString()));
+            logFile("severe",("Reset LU EX: " + ex.toString()));
         }
     }
     
     private String deletePlayer(String player) throws IOException {
-        List<String> tlist = new Converters().filelistToList(("./"+playersPath),
-                "\n");
-        List<String> newlist = new ChecksBalances().deletePlayer(tlist,player);
-        return new Converters().listtoString(newlist);
+        try {
+            List<String> tl = new Converters().filelistToList(("./"+playersPath)
+                ,"\n");
+            List<String> newlist = new ChecksBalances().deletePlayer(tl,player);
+            return new Converters().listtoString(newlist);
+        } catch (IOException ex) {
+            logFile("severe","Delete User IOEX: " + ex.toString());
+            return null;
+        }
     }
     
     private String playerPopup() throws IOException, Exception {
@@ -593,107 +610,126 @@ public class StartGUI extends javax.swing.JFrame {
         String delim = "\n";
         String[] options = new String[] {"Select Hero", "Create New Hero", "Del"
                 + "ete Hero"};
-        comboMaker(new Converters().filelistToList(path,delim),playerPoplist,0
-        );
-        int newheroChoice = JOptionPane.showOptionDialog(null,playerPoplist,"Yo"
-            + "ur New Hero",JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE
-            ,null,options, options[0]);
+        try {
+            comboMaker(new Converters().filelistToList(path,delim),playerPoplist
+                ,0);
+            int newheroChoice = JOptionPane.showOptionDialog(null,playerPoplist,
+                "Your New Hero",JOptionPane.DEFAULT_OPTION,JOptionPane.
+                PLAIN_MESSAGE,null,options, options[0]);
             int index = playerPoplist.getSelectedIndex();
-        if(newheroChoice == 0) {
-            String playername = (playerPoplist.getItemAt(index)).toString();
-            selectedPlayer = listitemFinder(new Converters().filelistToList(path
-                    ,delim),playername);
+            if(newheroChoice == 0) {
+                String playername = (playerPoplist.getItemAt(index)).toString();
+                selectedPlayer = listitemFinder(new Converters().filelistToList(
+                    path,delim),playername);
             } else {
                 if(newheroChoice == 1) {
-                    if(!newplayerPopup(new Converters().filelistToList(path,delim)))
-                    {
+                    if(!newplayerPopup(new Converters().filelistToList(path,
+                        delim))) {
                         selectedPlayer = listitemFinder(new Converters()
                             .filelistToList(path,delim),defaultName);
                     } else {
                         selectedPlayer = listitemFinder(new Converters()
                             .filelistToList(path,delim),playerName);
                     }
-                } if(newheroChoice == 2) {
-                    if((playerPoplist.getSelectedItem().toString()).equals(defaultName)) 
-                    {
-                        plainpopupBox(defaultName + " is immortal",defaultName + " cann"
-                            + "ot be deleted!");
-                        selectedPlayer = "_+_+_";
-                    } else {
-                        String playername = (playerPoplist.getItemAt(index)).toString();
-                        selectedPlayer = listitemFinder(new Converters().filelistToList(
-                                path,delim),playername);
-                        String byebyePlayer = selectedPlayer.substring(0, selectedPlayer.indexOf(","));
-                        boolean deleteChoice = yesorNo("Are you sure you want to delete " + 
-                            byebyePlayer + " from the game?","Delete " + byebyePlayer);
-                        if(deleteChoice == true) {
-                            String listwithdelete = deletePlayer(selectedPlayer);
-                            System.gc();
-                            ChecksBalances.ifexistDelete(playersPath);
-                            new ChecksBalances().newfileCheck(playersPath, true,
-                                listwithdelete,true);
-                            plainpopupBox(byebyePlayer + " is Deleted!",byebyePlayer + " is gone forever!\n\nYou are now " + defaultName);
-                            reverttoDefault();
-                            selectedPlayer = "_-_-_";
-                        } else {
-                            selectedPlayer = "_+_+_";
-                        }
-                    }
                 } else {
+                    if(newheroChoice == 2) {
+                        if((playerPoplist.getSelectedItem().toString()).equals
+                            (defaultName)) {
+                            plainpopupBox(defaultName + " is immortal",
+                                defaultName + " cannot be deleted!");
+                            selectedPlayer = "_+_+_";
+                        } else {
+                            String playername = (playerPoplist.getItemAt(index))
+                                .toString();
+                            selectedPlayer = listitemFinder(new Converters().
+                                filelistToList(path,delim),playername);
+                            String byebyePlayer = selectedPlayer.substring(0, 
+                                selectedPlayer.indexOf(","));
+                            boolean deleteChoice = yesorNo("Are you sure you wa"
+                                + "nt to delete " + byebyePlayer + " from the g"
+                                + "ame?","Delete " + byebyePlayer);
+                            if(deleteChoice == true) {
+                                String listwithdelete = deletePlayer(
+                                    selectedPlayer);
+                                System.gc();
+                                ChecksBalances.ifexistDelete(playersPath);
+                                new ChecksBalances().newfileCheck(playersPath,
+                                    true,listwithdelete,true);
+                                plainpopupBox(byebyePlayer + " is Deleted!",
+                                    byebyePlayer + " is gone forever!\n\nYou ar"
+                                    + "e now " + defaultName);
+                                reverttoDefault();
+                                selectedPlayer = "_-_-_";
+                            } else {
+                                selectedPlayer = "_+_+_";
+                            }
+                        }
+                    } else {
                     selectedPlayer = "_+_+_";
+                    }
                 }
             }
+        } catch (IOException ex) {
+            logFile("severe","xx IOEX: " + ex.toString());
+        }
         return selectedPlayer;
     }
     
     private void reverttoDefault() throws IOException, Exception {
-        String path = "./" + playersPath;
-        String delim = "\n";
-        String playerString = listitemFinder(new Converters()
-            .filelistToList(path,delim),defaultName);
-        playerName = playerString.substring(0, playerString.indexOf(','));
-        playerScore = Integer.parseInt(playerString.substring(playerString
-            .indexOf(',') + 1,playerString.length()));
-            resetLastUsed(playerName,playerScore);
+        try {
+            String path = "./" + playersPath;
+            String delim = "\n";
+            String playerString = listitemFinder(new Converters()
+                .filelistToList(path,delim),defaultName);
+            playerName = playerString.substring(0, playerString.indexOf(','));
+            playerScore = Integer.parseInt(playerString.substring(playerString
+                .indexOf(',') + 1,playerString.length()));
+                resetLastUsed(playerName,playerScore);
+        } catch (Exception ex) {
+            logFile("severe","Revert Default EX: " + ex.toString());
+        }
     }
     
     private boolean newplayerPopup(List<String> list) throws IOException {        
-        String s = (String)JOptionPane.showInputDialog(null,"Enter New Hero Nam"
-                + "e\n\n**No Special Characters or Spaces please**\n ","Create "
-                + "a New Hero",JOptionPane.PLAIN_MESSAGE,null,null,null);
-        if (s.equals(defaultName)) {
-            JOptionPane.showMessageDialog(null,"You are a special kind of being"
-                    + " to just want to be the default " + defaultName + ".");
-            return false;
-        } else {
-            if ((s.isEmpty() || s == (null) || s.length() <= 0)) {
-                JOptionPane.showMessageDialog(null,"You decided not to give a n"
-                        + "ame...  So we will just go with "+defaultName+".");
-                return false;
+        boolean retVal = false;
+        try {
+            String s = (String)JOptionPane.showInputDialog(null,"Enter New Hero"
+                +" Name\n\n**No Special Characters or Spaces please**\n ","Crea"
+                + "te a New Hero",JOptionPane.PLAIN_MESSAGE,null,null,null);
+            if (s.equals(defaultName)) {
+                JOptionPane.showMessageDialog(null,"You are a special kind of b"
+                    + "eing to just want to be the default "+defaultName+".");
             } else {
-                boolean invalidChars = new ChecksBalances().nameCheck(list,s,0);
-                if (invalidChars) {
-                    JOptionPane.showMessageDialog(null,"Since you decided to us"
-                            + "e special characters, we will just go with " +
-                            defaultName + ".");
-                    return false;
+                if ((s.isEmpty() || s == (null) || s.length() <= 0)) {
+                    JOptionPane.showMessageDialog(null,"You decided not to give"
+                       +" a name...  So we will just go with "+defaultName+".");
                 } else {
-                    boolean pExists = new ChecksBalances().nameCheck(list,s,1);
-                    if (pExists) {
-                        JOptionPane.showMessageDialog(null,"That name already e"
-                                + "xists, so we will just go with " + 
-                                defaultName + ".");
-                        return false;
+                    boolean invalidChars = new ChecksBalances().nameCheck(list,s
+                        ,0);
+                    if (invalidChars) {
+                        JOptionPane.showMessageDialog(null,"Since you decided t"
+                            +"o use special characters, we will just go with " +
+                            defaultName + ".");
                     } else {
-                        Files.write(Paths.get(playersPath), ("\n" + s + ",0").
+                        boolean pExists = new ChecksBalances().nameCheck(list,s,
+                            1);
+                        if (pExists) {
+                            JOptionPane.showMessageDialog(null,"That name alrea"
+                                + "dy exists, so we will just go with " +
+                                    defaultName + ".");
+                        } else {
+                            Files.write(Paths.get(playersPath),("\n"+s+",0").
                                 getBytes(), StandardOpenOption.APPEND);
-                        playerName = s;
-
-                        return true;
+                            playerName = s;
+                            retVal = true;
+                        }
                     }
                 }
             }
+        } catch (IOException ex) {
+            logFile("severe","New Hero Popup IOEX: " + ex.toString());
         }
+        return retVal;
     }
 
     private void comboMaker(List<String> list,JComboBox dropdown,int type) {
@@ -805,26 +841,33 @@ public class StartGUI extends javax.swing.JFrame {
     }
     
     private void messageBox() throws IOException {
-        new TypeEffect(mainText,greetingSelector("greets.dat") + ", " + 
-                playerName + ".\n\n" + "Are you ready to Save the World...  ?")
-                .start();
+        try {
+            new TypeEffect(mainText,greetingSelector(greetsPath)+", "+playerName
+                +".\n\n" + "Are you ready to Save the World...  ?").start();
+        } catch (IOException ex) {
+            logFile("severe","Message Box IOEX: " + ex.toString());
+        }
     }
 
     private String greetingSelector(String source) throws IOException {
-        List<String> list = new Converters().resourcefileToList(source);
-        String finalstring = list.get((new Random()).nextInt(list.size()));
-        return (new Converters().capFirstLetter(finalstring));
+        try {
+            List<String> list = new Converters().resourcefileToList(source);
+            String finalstring = list.get((new Random()).nextInt(list.size()));
+            return (new Converters().capFirstLetter(finalstring));
+        } catch (IOException ex) {
+            logFile("severe","Greet Selector IOEX: " + ex.toString());
+            return "Hello";
+        }
     }    
-   
     //</editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="Button Methods">
-    private void startButton() throws IOException {
+    private void startButton() throws IOException, Throwable {
         try {
             cleanUp();
             new GameGUI().setVisible(true);
         } catch(Exception ex) {
-            logFile("severe","New Button Error.  Exception: " + ex);
+            logFile("severe","New Button Error.  IOEX: " + ex.toString());
         }
     }
 
@@ -832,27 +875,23 @@ public class StartGUI extends javax.swing.JFrame {
         try {
             buildPlayers();
         } catch(Exception ex) {
-            logFile("severe","Change Button Error.  IOException: " + ex);
+            logFile("severe","Change Button Error.  IOEX: " + ex.toString());
         }
     }
 
     private void topscoreButton() throws IOException, InterruptedException {
         try {
             gettopScores(true);
-        } catch (Exception ex) {
-            logFile("severe","HOF Button Error.  Exception: " + ex);
+        } catch (IOException | InterruptedException ex) {
+            logFile("severe","HOF Button Error.  IO-ITEX: " + ex.toString());
         }
     }
     
-    private void settingsButton() {
-        //future settings options go here
-    }
-
     public void aboutButton() throws IOException {
         try {
             aboutPopup();
         } catch(IOException ex) {
-            logFile("severe","About Button Error.  Exception: " + ex);
+            logFile("severe","About Button Error.  IOEX: " + ex.toString());
         }
     }
 
@@ -860,15 +899,20 @@ public class StartGUI extends javax.swing.JFrame {
         try {
             donatePopup();
         } catch(IOException ex) {
-            logFile("severe","Donate Button Error.  Exception: " + ex);
+            logFile("severe","Donate Button Error.  IOEX: " + ex.toString());
         }
     }
     
-    private void exitButton() {
-        boolean exitChoice = yesorNo("Are you sure you want to exit?","Exit the"
-                + " Game?");
-        if(exitChoice == true)
-            exitProcess();
+    private void exitButton() throws IOException, InterruptedException {
+        try {
+            boolean exitChoice = yesorNo("Are you sure you want to exit?","Exit"
+                + " the Game?");
+            if(exitChoice == true) {
+                exitProcess();
+            }
+        } catch (IOException | InterruptedException ex) {
+            logFile("severe","Exit Button Error.  EX:  " + ex.toString());
+        }
     }
     //</editor-fold>
     
@@ -959,7 +1003,7 @@ public class StartGUI extends javax.swing.JFrame {
     //</editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc="CleanUp and Exit Methods">   
-    private void cleanUp() {
+    private void cleanUp() throws IOException, InterruptedException {
         System.gc();
         dispose();
     }
@@ -969,13 +1013,17 @@ public class StartGUI extends javax.swing.JFrame {
         try {
             new StartGUI().setVisible(true);
         } catch (Exception ex) {
-            logFile("severe","Reset GUI Exception:" + ex);
+            logFile("severe","Reset GUI Exception:" + ex.toString());
         }
     }
     
-    private void exitProcess() {
-        cleanUp();
-        System.exit(0);
+    private void exitProcess() throws IOException, InterruptedException {
+        try {
+            cleanUp();
+            System.exit(0);
+        } catch (IOException | InterruptedException ex) {
+            logFile("severe","Exit Process EX: " + ex.toString());
+        }
     }
     //</editor-fold>
     
@@ -1009,7 +1057,6 @@ public class StartGUI extends javax.swing.JFrame {
     private javax.swing.JLabel nameLabel;
     private javax.swing.JMenuItem newMenu;
     private javax.swing.JMenu optionsMenu;
-    private javax.swing.JMenuItem settingsMenu;
     private javax.swing.JButton startButton;
     private javax.swing.JButton topscoreButton;
     // End of variables declaration//GEN-END:variables
